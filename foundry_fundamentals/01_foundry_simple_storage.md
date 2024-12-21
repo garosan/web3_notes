@@ -314,6 +314,14 @@ Follow the instructions from here to verify your contract on Etherscan:
 
 [Link](https://updraft.cyfrin.io/courses/foundry/foundry-simple-storage/verify-smart-contract-etherscan)
 
+## Cleaning up the project
+
+Forge has a built-in command to format our code that we should always run:
+
+`forge fmt`
+
+Finally, include a `README.md` file. This file serves as a guide for anyone who wants to learn about your project, how to use it, or how to contribute to it.
+
 ## Links
 
 - [Foundry Docs](https://book.getfoundry.sh/)
