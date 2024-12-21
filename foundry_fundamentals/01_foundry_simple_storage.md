@@ -68,7 +68,7 @@ Difference between `forge compile` and `forge build` commands.
 - Use `forge compile` for quick iterative development.
 - Use `forge build` when preparing for deployment, running a full suite of tests, or ensuring all configurations and optimizations are included.
 
-## Deploy a smart contract locally using Anvil
+## Introduction to Anvil
 
 Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC.
 
@@ -76,9 +76,149 @@ To run Anvil you simply have to type `anvil` in the terminal.
 
 This testnet node always listens on `127.0.0.1:8545` this will be our `RPC_URL` parameter when we deploy smart contracts here. More on this later!
 
-//TODO
-
 - Read more on [Anvil](https://book.getfoundry.sh/reference/anvil/)
+
+## Deploy a smart contract locally
+
+You can read [here](https://book.getfoundry.sh/reference/forge/forge-create) all the options to deploy using `forge create`.
+
+Try running `forge create SimpleStorage`. It should fail because we haven't specified a couple of required parameters:
+
+1. `Where do we deploy?`
+2. `Who's paying the gas fees/signing the transaction?`
+
+## Deploy locally using Anvil
+
+- Run `anvil` in one terminal
+
+If you are working with Anvil you can skip the rpc url:
+
+> **THIS IS JUST FOR DEMO AND EDUCATION PURPOSES**
+
+**NEVER PASTE THE PRIVATE KEY, i.e. NEVER DO THIS:**
+
+`forge create SimpleStorage --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`
+
+> **The above is anvil's 1st test private key, it's a dummy private key**
+
+## Using `--interactive`
+
+`forge create SimpleStorage --interactive`
+
+This will prompt us for our private key. I'll take the 1st of the ones given by Anvil, paste it (nothing actually shows but you click enter) and you get the following back:
+
+```
+Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Deployed to: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+Transaction hash: 0xe933149cbe9c0958a21367bbf2f30a26dcdb497bcb22da9642c2059a71907cf8
+```
+
+## 🚨 PRIVATE KEY SAFETY 🚨
+
+You can delete your bash history by typing `history -c`.
+
+## Deploy using a script
+
+In Foundry we keep our scripts in the `script` folder.
+
+Please create a new file called `DeploySimpleStorage.s.sol`. Using `.s.sol` as a suffix is a naming convention for Foundry scripts.
+
+Read the [best practices](https://book.getfoundry.sh/tutorials/best-practices#scripts) for Foundry scripts.
+
+`DeploySimpleStorage.s.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import {Script} from "forge-std/Script.sol";
+import {SimpleStorage} from "../src/SimpleStorage.sol";
+
+contract DeploySimpleStorage is Script {
+    function run() external returns (SimpleStorage) {
+        vm.startBroadcast();
+
+        SimpleStorage simpleStorage = new SimpleStorage();
+
+        vm.stopBroadcast();
+        return simpleStorage;
+    }
+}
+```
+
+Make sure Anvil isn't running and run `forge script script/DeploySimpleStorage.s.sol`.
+
+You should get this output:
+
+```bash
+[⠆] Compiling...
+[⠔] Compiling 2 files with 0.8.19
+[⠒] Solc 0.8.19 finished in 1.08s
+Compiler run successful!
+Script ran successfully.
+Gas used: 338569
+
+== Return ==
+0: contract SimpleStorage 0x90193C961A926261B756D1E5bb255e67ff9498A1
+
+If you wish to simulate on-chain transactions pass a RPC URL.
+```
+
+If we didn't pass an RPC URL, where did this deploy to? If no RPC URL is specified, Foundry automatically launches an Anvil instance, runs your script and terminates the Anvil instance.
+
+Now run an Anvil instance and in a new terminal type:
+
+`forge script script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545`
+
+You will get the following output:
+
+```bash
+No files changed, compilation skipped
+EIP-3855 is not supported in one or more of the RPCs used.
+Unsupported Chain IDs: 31337.
+Contracts deployed with a Solidity version equal or higher than 0.8.20 might not work properly.
+For more information, please see https://eips.ethereum.org/EIPS/eip-3855
+Script ran successfully.
+
+== Return ==
+0: contract SimpleStorage 0x34A1D3fff3958843C43aD80F30b94c510645C316
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 31337
+
+Estimated gas price: 2 gwei
+
+Estimated total gas used for script: 464097
+
+Estimated amount required: 0.000928194 ETH
+
+==========================
+
+SIMULATION COMPLETE. To broadcast these transactions, add --broadcast and wallet configuration(s) to the previous command. See forge script --help for more.
+```
+
+Emphasis on the _SIMULATION COMPLETE._. Is it deployed now?
+
+No, the output indicates this was a simulation. But, we got a new folder out of this, the broadcast folder.
+
+Now **to actually deploy it locally** run:
+
+`forge script script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --broadcast --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`
+
+In the Anvil terminal, you'll see:
+
+```bash
+Transaction: 0xedae1838f9887073ad402ab58227fbff9fc3ac3496da14470f4a305535cd3ac4
+Contract created: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+Gas used: 341922
+
+Block Number: 1
+Block Hash: 0x2472ac00b89c5894fcbd92ccce0dd96530df256061f2c33118b6b23bda660cd8
+Block Time: "Sat, 21 Dec 2024 07:40:11 +0000"
+```
 
 ## Links
 
@@ -93,3 +233,14 @@ Extensions
 - [Solidity by Nomic Foundation](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity)
 - [Even Better TOML](https://marketplace.visualstudio.com/items?itemName=tamasfe.even-better-toml)
 - [Inline Bookmarks](https://marketplace.visualstudio.com/items?itemName=tintinweb.vscode-inline-bookmarks)
+
+Compromised private key hacks
+
+- [The Ronin hack](https://www.halborn.com/blog/post/explained-the-ronin-hack-march-2022)
+- [Chinese investor loses $42M](https://cointelegraph.com/news/chinese-vc-loses-42m-in-crypto-due-to-compromised-mnemonic-seed-phrase)
+- [The $477 million FTX hack](https://www.elliptic.co/blog/the-477-million-ftx-hack-following-the-blockchain-trail)
+
+More Links
+
+- [Scripting best practices](https://book.getfoundry.sh/tutorials/best-practices#scripts)
+- [Solidity scripting](https://book.getfoundry.sh/tutorials/solidity-scripting)
