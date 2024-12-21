@@ -113,7 +113,7 @@ Deployed to: 0x5FbDB2315678afecb367f032d93F642f64180aa3
 Transaction hash: 0xe933149cbe9c0958a21367bbf2f30a26dcdb497bcb22da9642c2059a71907cf8
 ```
 
-## 🚨 PRIVATE KEY SAFETY 🚨
+## Deleting your history
 
 You can delete your bash history by typing `history -c`.
 
@@ -220,6 +220,100 @@ Block Hash: 0x2472ac00b89c5894fcbd92ccce0dd96530df256061f2c33118b6b23bda660cd8
 Block Time: "Sat, 21 Dec 2024 07:40:11 +0000"
 ```
 
+## What is a transaction
+
+What you need to remember here is that a `broadcast` folder was created. Look inside in the `run-latest.json` file and you'll see this:
+
+```json
+  "transactions": [
+    {
+      "hash": "0xedae1838f9887073ad402ab58227fbff9fc3ac3496da14470f4a305535cd3ac4",
+      "transactionType": "CREATE",
+      "contractName": "SimpleStorage",
+      "contractAddress": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+      "function": null,
+      "arguments": null,
+      "transaction": {
+        "from": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+        "gas": "0x6c852",
+        "value": "0x0",
+        "input": "0x60806...0033",
+        "nonce": "0x0",
+        "chainId": "0x7a69"
+      },
+      "additionalContracts": [],
+      "isFixedGasLimit": false
+    }
+  ],
+```
+
+**QUICK TIP**: To read this `"gas": "0x6c852"` in a human-readable way you can do this in the terminal:
+
+`cast --to-base 0x6c852 dec`
+
+## To use an `.env` file
+
+Create your `.env` file. **Remember to check that it's in your .gitignore!!**
+
+Next run `source .env`. This adds the above-mentioned environment variables into our shell.
+
+Now you can run your commands in the terminal like:
+
+`some command --cmd $MY_ENV_VAR1 $MY_ENV_VAR2`
+
+## 🚨 PRIVATE KEY SAFETY 🚨
+
+But now you would have your private keys in plain text in your `.env` file.
+
+Foundry has a very nice option called `keystore`. Using `forge script --keystore <PATH>` allows you to specify a path to an encrypted store file, encrypted by a password. Thus your private key would never be available in plain text.
+
+Let's agree to the following:
+
+1. For testing purposes use a `$PRIVATE_KEY` in an `.env` file as long as you don't expose that `.env` file anywhere.
+2. Where real money is involved use the `--interactive` option or a [keystore file protected by a password](https://github.com/Cyfrin/foundry-full-course-f23?tab=readme-ov-file#can-you-encrypt-a-private-key---a-keystore-in-foundry-yet).
+
+## 🚨 PRIVATE KEY SAFETY UPDATE 🚨
+
+You should never use a `.env` again, but instead **encrypt your Keys Using ERC2335**
+
+For this example we will use `0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80` (key 0 from Anvil).
+
+Type this in your terminal (not inside VS Code):
+
+`cast wallet import nameOfAccountGoesHere --interactive`
+
+You will be asked for your private key and a password to secure it. You will do this only once.
+
+## Interacting with a smart contract using the CLI
+
+Now we have `anvil` running and the smart contract is deployed. Copy the contact address.
+
+We will use `cast send` to interact with our deployed contract:
+
+`cast send 0xcontractAddress "store(uint256)" 1337 --rpc-url $RPC_URL --private-key $PRIVATE_KEY`
+
+Where `"store(uint256)"` is the signature of the function we're calling and `1337` is the argument passed to `store()`.
+
+If you'd like to call the retrieve() function to read the number you'd do:
+
+`cast call 0x5FbDB2315678afecb367f032d93F642f64180aa3 "retrieve()"`
+
+You will receive back the value in hex format. To convert do:
+
+`cast --to-base 0x0000000000000000000000000000000000000000000000000000000000000539 dec`
+
+## Deploying our contract to a testnet or mainnet
+
+For this exercise, this will be fairly easy, we will go the `.env` file route and replace the values with our actual private key with testnet funds and our RPC URL from Infura or Alchemy.
+
+`forge script script/DeploySimpleStorage.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --private-key $PRIVATE_KEY`
+
+## Verify your smart contract on Etherscan
+
+Follow the instructions from here to verify your contract on Etherscan:
+
+[Link](https://updraft.cyfrin.io/courses/foundry/foundry-simple-storage/verify-smart-contract-etherscan)
+
 ## Links
 
 - [Foundry Docs](https://book.getfoundry.sh/)
@@ -244,3 +338,4 @@ More Links
 
 - [Scripting best practices](https://book.getfoundry.sh/tutorials/best-practices#scripts)
 - [Solidity scripting](https://book.getfoundry.sh/tutorials/solidity-scripting)
+- [Cast Reference](https://book.getfoundry.sh/reference/cast/cast)
