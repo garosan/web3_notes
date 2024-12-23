@@ -1,6 +1,6 @@
 # Cyfrin Updraft Notes 🐸🐍
 
-## Courses 🎓
+## Courses Notes 🎓
 
 - Beginner
   - Blockchain Basics. 23 lessons, 3hrs.
@@ -16,3 +16,9 @@
   - Smart Contract DevOps. 22 lessons, 2hrs.
   - Curve Stableswap. 48 lessons, 2hrs.
   - Uniswap V2. 75 lessons, 6hrs.
+
+## General Links
+
+- [Hardhat docs](https://hardhat.org/docs)
+- [Foundry docs](https://book.getfoundry.sh/)
+- [Open Zeppelin](https://docs.openzeppelin.com/)
