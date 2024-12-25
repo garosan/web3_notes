@@ -22,3 +22,10 @@
 - [Hardhat docs](https://hardhat.org/docs)
 - [Foundry docs](https://book.getfoundry.sh/)
 - [Open Zeppelin](https://docs.openzeppelin.com/)
+
+## Youtube Channels
+
+- [Andy Li Web3 Security](https://www.youtube.com/@andyli)
+- [JohnnyTime Web3 Security](https://www.youtube.com/@JohnnyTime)
+- [Blockchain Security Series](https://www.youtube.com/@blockchainsecurityseries)
+- [Defy Education](https://www.youtube.com/@DefyEducation)
