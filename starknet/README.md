@@ -12,6 +12,7 @@
 - [Argent]
 - [Braavos]
 - [StarkGate Official Bridge](https://starkgate.starknet.io/)
+- [OnlyDust - OS Funding](https://www.onlydust.com/)
 
 ## 🛠️ Dev Resources
 
@@ -26,3 +27,6 @@
 ## 🧑 People
 
 - [David Barreto - DevRel](https://x.com/barretodavid)
+- [Robert Kodra- DevRel](https://x.com/robertkp13)
+- [@eniwhere - Builder](https://x.com/eniwhere_)
+  - [GH](https://github.com/enitrat)

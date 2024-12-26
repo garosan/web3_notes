@@ -91,3 +91,27 @@ Most interesting for me: **AA + Secure Enclave: You can turn your phone into a h
 Secure enclave = TEE: Trusted Execution Environment.
 
 [TEE](https://en.wikipedia.org/wiki/Trusted_execution_environment) is the _protocol_, Secure Enclave is Apple's implementation product.
+
+## Session 2
+
+[Link](https://www.youtube.com/watch?v=6QgMr4sJBds)
+
+Topics:
+
+- Architecture 101
+- Transactions
+- Finality
+- Full Nodes
+- Recursive Proving
+
+▶️ Cairo
+
+Cairo source file > Sierra > Safe CASM > Validity Proof
+
+- Cairo compiles to Sierra (Safe Intermediate Representation)
+- The sequencer compiles Sierra to _Safe CASM_ (Cairo Assembly)
+- The Safe CASM generates the Validity Proof
+- Failed txs are included in blocks
+- Sequencer always gets compensated
+
+Sierra was introduced to eliminate the DoS vector in CairoZero (legacy version of Cairo).
