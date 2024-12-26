@@ -3,4 +3,3 @@
 - [Cyfrin Notes](#)
 - [Encode EVM Bootcamp Notes](#)
 - [Book Reviews and Summaries](#)
-- []
