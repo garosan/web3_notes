@@ -23,6 +23,8 @@ For art use cases of NFTs, people used to include all the metadata (like the ima
 
 Often a protocol will use a service like **[IPFS](https://ipfs.tech/)** to store their images and metadata in a more decentralized way.
 
+## Questions and Exercises
+
 ## Links
 
 - [Repo](https://github.com/Cyfrin/foundry-nft-cu)
