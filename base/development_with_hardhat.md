@@ -1,9 +1,20 @@
 # Development with Hardhat
 
-## Setup and Overview
+- Hardhat Setup and Overview
+- Testing with Typescript
+- Etherscan
+- Deploying Smart Contracts
+- Verifying Smart Contracts
+- Mainnet Forking
 
-Node 18+ as a prerequisite.
+## Hardhat Setup and Overview
 
-yarn add --dev hardhat
+## Testing with Typescript
 
-npx hardhat
+## Etherscan
+
+## Deploying Smart Contracts
+
+## Verifying Smart Contracts
+
+## Mainnet Forking
