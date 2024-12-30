@@ -91,3 +91,24 @@ aixbt is an experimental AI agent launched on Virtuals in November 2024 by rxbt.
 - Launchpad platforms: Virtual, vvaifu
 - Single AI case: AIXBT, Zerebro
 - Frameworks: ELIZA, ARC
+
+## Espacio Cripto Report
+
+- [Microsoft anuncia AI agents services](https://blogs.microsoft.com/blog/2024/10/21/new-autonomous-agents-scale-your-team-like-never-before/)
+
+- [Lincoln de Base, AI agents sobre Base](https://x.com/MurrLincoln/status/1850226148594082120)
+
+La principal novedad de agentes IA: ya no se limita a responder preguntas o realizar tareas simples, sino que ahora puede ejecutar procesos complejos y colaborar en flujos de trabajo avanzados.
+
+Ya hay muchos proyectos que están combinando IA + Blockchain, como Bittensor o ICP.
+
+El caso de [Truth Terminal](https://x.com/truth_terminal)
+
+- [A16Z le dedicó un podcast](https://www.youtube.com/watch?v=EKspo1FLj-4)
+- [La opinión de EC](https://youtu.be/ufUc7f9KLaY?si=a7vuYEeIj7xFoTEa&t=1587)
+
+- [Base Docs for AI Agents](https://docs.cdp.coinbase.com/learn/docs/based-ai-agents)
+
+## Más Links y Resources
+
+- [Anthropic - Building Effective AI Agents](https://www.anthropic.com/research/building-effective-agents)
