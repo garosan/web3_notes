@@ -124,6 +124,127 @@ contract BasicNft is ERC721 {
 }
 ```
 
+Now let's create a folder called `img` in our root. I will add 4 DOGI images I created with ChatGPT.
+
+## Intro to IPFS
+
+IPFS is a decentralized storage protocol, it doesn't do any computation. It basically works like this:
+
+We provide our data to the IPFS network via a node, a hash is produced that points to the location and details of the data and also serves to verify the data's integrity.
+
+You can check more info in these links:
+
+- [IPFS](https://ipfs.tech/)
+- [IPFS Docs](https://docs.ipfs.tech/)
+- [IPFS Project explanation](https://iq.wiki/wiki/ipfs)
+
+Let's download the Desktop IPFS application to start using it.
+
+After downloading the Desktop app I uploaded my DOGI images, and I immediatly get a CID for all of them. I can now view them in my browser:
+
+`https://ipfs.io/ipfs/QmTx1tZNCySh1Q5Z6UNwhrjYZZJETbQLcvHFkvSjENiZzS`
+
+## TokenURI function
+
+Ok, now check this tokenURI provided by Cyfrin:
+
+```json
+{
+  "name": "PUG",
+  "description": "An adorable PUG pup!",
+  "image": "https://ipfs.io/ipfs/QmSsYRx3LpDAb1GZQm7zZ1AuHZjfbPkD6J7s9r41xu1mf8?filename=pug.png",
+  "attributes": [
+    {
+      "trait_type": "cuteness",
+      "value": 100
+    }
+  ]
+}
+```
+
+We could use this as the return value for our `tokenUri` function but that would mean every DOGI minted would be identical to each other. So instead, we will allow the user to pass a tokenUri (a json object) to the mint function and map this URI to their minted tokenId:
+
+```solidity
+contract BasicNft is ERC721 {
+    uint256 private s_tokenCounter;
+    mapping(uint256 => string) private s_tokenIdToUri;
+
+    constructor() ERC721("Doggie", "DOGI") {
+        s_tokenCounter = 0;
+    }
+
+    function mintNFT(string memory tokenUri) public returns (uint256) {
+        s_tokenIdToUri[s_tokenCounter] = tokenUri;
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
+        return s_tokenIdToUri[tokenId];
+    }
+}
+```
+
+Awesome. Now let's actually mint the NFT and increment our token counter. We can mint the token by calling `_safeMint` from OZ.
+
+Our final code should look like this:
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
+pragma solidity 0.8.26;
+
+contract BasicNft is ERC721 {
+    uint256 private s_tokenCounter;
+    mapping(uint256 => string) private s_tokenIdToUri;
+
+    constructor() ERC721("Doggie", "DOGI") {
+        s_tokenCounter = 0;
+    }
+
+    function mintNFT(string memory tokenUri) public returns (uint256) {
+        s_tokenIdToUri[s_tokenCounter] = tokenUri;
+        _safeMint(msg.sender, s_tokenCounter);
+        s_tokenCounter++;
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
+        return s_tokenIdToUri[tokenId];
+    }
+}
+```
+
+## Deploying and interacting with the contract
+
+- [Txn hash](https://sepolia.basescan.org/tx/0x6f748bce31b9851e7d3ede6befb20fc500eae0e277c8299b76f4e52cdefea174) of the deployed BasicNft contract.
+- [Contract created](https://sepolia.basescan.org/address/0xc282a7dd595f35ea7e29a114d98f3d05f515724f)
+
+To test this, I created a `dogi001.json` file and uploaded it to IPFS. File content:
+
+```json
+{
+  "name": "DOGI001",
+  "description": "A cute dogi",
+  "image": "https://ipfs.io/ipfs/QmTx1tZNCySh1Q5Z6UNwhrjYZZJETbQLcvHFkvSjENiZzS",
+  "attributes": [
+    {
+      "trait_type": "cuteness",
+      "value": 100
+    }
+  ]
+}
+```
+
+Then I pass this string with the CID I got:
+
+`ipfs://QmdUFESRZN2cN1pghHFW9bNwLYT6816bBaodVjwiaTTW5V`
+
+Now to confirm everything went well, pass '0' (since its the 1st minted NFT) to the `tokenURI` function and we get back the exact same string. Pretty underwhelming so far!
+
 ## Questions and Exercises
 
 Question ❓: What does the `--no-commit` flag do?
@@ -135,6 +256,8 @@ Question ❓: What does the `--no-commit` flag do?
 - [ERC-721: NFT Standard](https://eips.ethereum.org/EIPS/eip-721)
 - [ERC-1155: Multi Token Standard](https://eips.ethereum.org/EIPS/eip-1155)
 - [IPFS](https://ipfs.tech/)
+- [IPFS Docs](https://docs.ipfs.tech/)
+- [IPFS Project explanation](https://iq.wiki/wiki/ipfs)
 
 - [OpenSea](https://opensea.io/)
 - [Rarible](https://rarible.com/)
