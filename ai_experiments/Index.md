@@ -112,3 +112,5 @@ El caso de [Truth Terminal](https://x.com/truth_terminal)
 ## Más Links y Resources
 
 - [Anthropic - Building Effective AI Agents](https://www.anthropic.com/research/building-effective-agents)
+- [Y Combinator - Vertical AI Agents Could Be 10X Bigger Than SaaS](https://www.youtube.com/watch?v=ASABxNenD_U)
+- [Bankless - How Crypto AI Agents Will Take Over the World | Ejaaz Ahamadeen](https://www.youtube.com/watch?v=dleJuG0_Lfc)
