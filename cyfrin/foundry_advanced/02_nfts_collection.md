@@ -352,6 +352,82 @@ Let's now test mint and balance.
 We will write a test that ensures a user can mint the NFT and then change the user's balance.
 We will create a user to prank in our test.
 
+## Basic NFT Interactions
+
+Let's write an interaction script for this.
+
+Create the file `script/Interactions.s.sol`
+
+We know we'll always want to be interacting with the latest deployment, so let's install the `foundry-devops` library to help with this.
+
+`forge install Cyfrin/foundry-devops --no-commit`
+
+Now, we can import `DevOpsTools` and use this to acquire our most recent deployment. We'll use this address as a parameter for the `mint` function we'll call.
+
+## Deploy NFTs to a testnet
+
+Great, let's now deploy this to a testnet.
+
+Let's use the Makefile provided for us:
+
+```
+-include .env
+
+.PHONY: all test clean deploy fund help install snapshot format anvil
+
+DEFAULT_ANVIL_KEY := 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+help:
+	@echo "Usage:"
+	@echo "  make deploy [ARGS=...]\n    example: make deploy ARGS=\"--network sepolia\""
+	@echo ""
+	@echo "  make fund [ARGS=...]\n    example: make deploy ARGS=\"--network sepolia\""
+
+all: clean remove install update build
+
+# Clean the repo
+clean  :; forge clean
+
+# Remove modules
+remove :; rm -rf .gitmodules && rm -rf .git/modules/* && rm -rf lib && touch .gitmodules && git add . && git commit -m "modules"
+
+install :; forge install Cyfrin/foundry-devops@0.0.11 --no-commit && forge install foundry-rs/forge-std@v1.5.3 --no-commit && forge install openzeppelin/openzeppelin-contracts@v4.8.3 --no-commit
+
+# Update Dependencies
+update:; forge update
+
+build:; forge build
+
+test :; forge test
+
+snapshot :; forge snapshot
+
+format :; forge fmt
+
+anvil :; anvil -m 'test test test test test test test test test test test junk' --steps-tracing --block-time 1
+
+NETWORK_ARGS := --rpc-url http://localhost:8545 --private-key $(DEFAULT_ANVIL_KEY) --broadcast
+
+ifeq ($(findstring --network sepolia,$(ARGS)),--network sepolia)
+	NETWORK_ARGS := --rpc-url $(SEPOLIA_RPC_URL) --private-key $(PRIVATE_KEY) --broadcast --verify --etherscan-api-key $(ETHERSCAN_API_KEY) -vvvv
+endif
+
+deploy:
+	@forge script script/DeployBasicNft.s.sol:DeployBasicNft $(NETWORK_ARGS)
+
+Mint:
+    @forge script script/Interactions.s.sol:MintNFT ${NETWORK_ARGS}
+
+deployMood:
+	@forge script script/DeployMoodNft.s.sol:DeployMoodNft $(NETWORK_ARGS)
+
+mintMoodNft:
+	@forge script script/Interactions.s.sol:MintMoodNft $(NETWORK_ARGS)
+
+flipMoodNft:
+	@forge script script/Interactions.s.sol:FlipMoodNft $(NETWORK_ARGS)
+```
+
 ## Questions and Exercises
 
 Question ❓: What does the `--no-commit` flag do?
