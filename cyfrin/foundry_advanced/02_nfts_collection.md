@@ -245,9 +245,117 @@ Then I pass this string with the CID I got:
 
 Now to confirm everything went well, pass '0' (since its the 1st minted NFT) to the `tokenURI` function and we get back the exact same string. Pretty underwhelming so far!
 
+## Deploy Script
+
+Let's now create a deploy script to deploy this via Foundry.
+
+Create a new file `script/DeployBasicNft.s.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.26;
+
+import {Script} from "forge-std/Script.sol";
+import {BasicNft} from "../src/BasicNft.sol";
+
+contract DeployBasicNft is Script {
+    function run() external returns (BasicNft) {
+        vm.startBroadcast();
+        BasicNft basicNft = new BasicNft();
+        vm.stopBroadcast();
+        return basicNft;
+    }
+}
+```
+
+Run `forge compile` to ensure everything is ok.
+
+## Testing our NFT smart contract
+
+Now it's time to write tests! 🥳
+
+Create the file `test/BasicNftTest.t.sol`.
+
+We add this code:
+
+```solidity
+//SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.26;
+
+import {Test} from "forge-std/Test.sol";
+import {BasicNft} from "../src/BasicNft.sol";
+import {DeployBasicNft} from "../script/DeployBasicNft.s.sol";
+
+contract BasicNFTTest is Test {
+    DeployBasicNft public deployer;
+    BasicNft public basicNft;
+
+    function setUp() public {
+        deployer = new DeployBasicNft();
+        basicNft = deployer.run();
+    }
+
+    function testNameIsCorrect() public view {
+        string memory expected = "Doggie";
+        string memory actual = basicNft.name();
+        assert(expected == actual);
+    }
+}
+```
+
+But now we get this error:
+
+`Built-in binary operator == cannot be applied to types string memory and string memory.solidity(2271)`
+
+This is because a string in Solidity is an array of bytes and you can't compare arrays for equality like we're trying to do. We will **use chisel to encode each of our string objects into a hash and compare the hashes**.
+
+Do this for now:
+
+```bash
+chisel
+...
+string memory cat = "cat";
+string memory dog = "dog";
+```
+
+When you type `cat` you get this crazy output:
+
+![](https://updraft.cyfrin.io/foundry-nfts/7-basic-nft-tests/basic-nft-tests2.png)
+
+We will:
+
+1. Use `abi.encodePacked` to convert this to bytes
+2. Use keccak256 to hash the value into a `bytes32` object.
+
+```bash
+bytes memory encodedCat = abi.encodePacked(cat);
+bytes32 catHash = keccak256(encodedCat);
+```
+
+If we apply this encoding and hashing methodology to our BasicNft test, we should come out with something that looks like this:
+
+```solidity
+function testNameIsCorrect() public view {
+  string memory expectedName = "Doggie";
+  string memory actualName = basicNft.name();
+
+  assert(keccak256(abi.encodePacked(expectedName)) == keccak256(abi.encodePacked(actualName)));
+}
+```
+
+Now run `forge test --mt testNameIsCorrect` and tests should pass.
+
+Let's now test mint and balance.
+
+We will write a test that ensures a user can mint the NFT and then change the user's balance.
+We will create a user to prank in our test.
+
 ## Questions and Exercises
 
 Question ❓: What does the `--no-commit` flag do?
+Question ❓: Why can't we just compare a string to a string in our Solidity tests and what's the solution?
 
 ## 🛠️ Links and Resources
 
