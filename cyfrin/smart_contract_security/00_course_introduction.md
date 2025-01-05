@@ -1,4 +1,4 @@
-# Course Introduction and Review
+# Course Introduction
 
 Taught by:
 
@@ -51,42 +51,9 @@ Topics covered:
 - [DeFi Security Summit 2023 - Session 1: DeFi Protocols 1 - Peter Kacherginsky](https://www.youtube.com/watch?v=jSpvDhuaCgc)
 - [The State of DeFi Security - 2024 | Peter Kacherginsky](https://www.youtube.com/watch?v=rEWu0jZWLMo)
 
+- [NFT 0 - Arbitrum](https://arbiscan.io/address/0xf923431da74ecc873c4d641fbdfa2564baafca9f#code)
+
 🎯 Exercise: `Write yourself a message about why you want this`
 
 This will be important for when things get hard
 Is it money? Save web3? Become someone?
-
-## Review - Tooling Prerequisites
-
-- VSCode or [VSCodium](https://vscodium.com/): VSCode without the Microsoft telemetry.
-- Foundry
-- wsl
-
-## Review - Solidity Prerequisites
-
-- Be familiar with compiling and deploying to local and testnet blockchains.
-- Familiar with Foundry's working tree and basic commands.
-- Familiarty with regular and fuzz testing
-- Stateful Fuzzing/Invariant Tests (covered in next lesson)
-
-## Review - Fuzzing and invariant tests
-
-Often, hacks result from scenarios you didn't anticipate or consider for testing. But what if you could write a test that checks for every possible scenario, not just one? This is known as **fuzz testing**.
-
-An invariant is a property of the system that should always hold.
-
-The Fundamental Principle: Testing Invariants
-
-Each system, from a function to an entire program, has an integral property, often referred to as the _invariant_. This property must always hold true.
-
-### Introducing Fuzz Tests and Invariant Tests
-
-There are two popular methodologies when dealing with edge cases: using _fuzz tests/invariant tests_, or _symbolic execution_ (which we'll save for another day).
-
-Foundry will automatically randomize data and use numerous examples to run through the test script. This test will be supplied random data from 0 to uint256.max(), as many times as you've conifigured runs.
-
-> Reminder: You can configure the number of runs in your foundry.toml under the \[fuzz] variable
-
-Stateless Fuzzing versus Stateful Fuzzing
-
-`Stateful fuzzing`, instead of resetting the contract state for each new run, will use the ending state of your previous run as the starting state of your next.
