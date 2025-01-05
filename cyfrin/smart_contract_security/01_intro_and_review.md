@@ -9,11 +9,16 @@ Taught by:
 - [Pashov](https://x.com/pashovkrum)
   - [pashov.net](https://www.pashov.net/)
   - [Github](https://github.com/pashov)
+- [Juliette](https://x.com/_juliettech)
 - Johnny Time from Gingersec
-- Andy from Sigma Prime
-- Josselin from Trail of Bits
-- Owen from Guardian Audience
-- Hans, one of the top competitive auditors
+- Andy Li
+  - [Youtube](https://www.youtube.com/@andyli)
+- [Josselin Feist](https://x.com/Montyly) from Trail of Bits
+- Alex Roan
+- Owen from Guardian Audits
+  - [X](https://x.com/0xOwenThurm)
+  - [Youtube](https://www.youtube.com/@0xOwenThurm)
+- Hans Friese, one of the top competitive auditors
 
 Topics covered:
 
@@ -40,6 +45,11 @@ Topics covered:
 - [Blockchain Threat Intelligence by Peter Kacherginsky](https://x.com/blockthreat)
 
 ## Exercises
+
+- [DeFi Security Summit](https://defisecuritysummit.org/)
+- [DeFi Security Summit Channel](https://www.youtube.com/@defisecuritysummit2088)
+- [DeFi Security Summit 2023 - Session 1: DeFi Protocols 1 - Peter Kacherginsky](https://www.youtube.com/watch?v=jSpvDhuaCgc)
+- [The State of DeFi Security - 2024 | Peter Kacherginsky](https://www.youtube.com/watch?v=rEWu0jZWLMo)
 
 🎯 Exercise: `Write yourself a message about why you want this`
 
