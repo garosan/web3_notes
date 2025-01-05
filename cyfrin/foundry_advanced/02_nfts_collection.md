@@ -1,4 +1,4 @@
-# Develop an NFTs Collection
+# # Section 02. Develop an NFTs Collection
 
 ## Introduction
 

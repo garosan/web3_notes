@@ -1,4 +1,4 @@
-# Section 01. Advanced Foundry. ERC20 Crypto Currency
+# Section 01. ERC20 Crypto Currency
 
 ## Create an ERC 20
 
