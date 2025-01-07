@@ -99,19 +99,31 @@ If you are working with Anvil you can skip the rpc url:
 
 `forge create SimpleStorage --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`
 
-> **The above is anvil's 1st test private key, it's a dummy private key**
+> **The above is anvil's first test private key, it's a dummy private key**
 
 ## Using `--interactive`
 
 `forge create SimpleStorage --interactive`
 
-This will prompt us for our private key. I'll take the 1st of the ones given by Anvil, paste it (nothing actually shows but you click enter) and you get the following back:
+This will prompt us for our private key. I'll take the first of the ones given by Anvil, paste it (nothing actually shows but you click enter) and you get the following back:
 
 ```
 Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 Deployed to: 0x5FbDB2315678afecb367f032d93F642f64180aa3
 Transaction hash: 0xe933149cbe9c0958a21367bbf2f30a26dcdb497bcb22da9642c2059a71907cf8
 ```
+
+## What is dry-run?
+
+When you run the above command you get:
+
+`Warning: Dry run enabled, not broadcasting transaction`
+
+A dry-run is a simulation mode to allow you to preview the outcome of the deployment. This is good for several reasons:
+
+Safety: It ensures that you can verify the deployment parameters, like gas estimates, constructor arguments, and deployment costs.
+Testing: Verify that your deployment setup works correctly without spending gas on a live network.
+Configuration Validation: Helps catch misconfigurations before real deployment.
 
 ## Deleting your history
 
@@ -163,6 +175,8 @@ Gas used: 338569
 
 If you wish to simulate on-chain transactions pass a RPC URL.
 ```
+
+If you get an error from a missing `Counter.sol` file or similar in your `artifacts` folder, run `forge clean` and then run your script again.
 
 If we didn't pass an RPC URL, where did this deploy to? If no RPC URL is specified, Foundry automatically launches an Anvil instance, runs your script and terminates the Anvil instance.
 
@@ -323,6 +337,10 @@ Forge has a built-in command to format our code that we should always run:
 Finally, include a `README.md` file. This file serves as a guide for anyone who wants to learn about your project, how to use it, or how to contribute to it.
 
 ## Questions and Exercises
+
+Question ❓: What are the different mining modes in `Anvil`?
+
+R.- By default, a new block is generated everytime a new transaction is submitted. You can change this to interval mining with `--block-time <block-time-in-seconds>` or to _never_ with `anvil --no-mining` and generate the blocks on demand.
 
 ## 🛠️ Links and Resources
 
