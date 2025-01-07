@@ -328,6 +328,8 @@ Follow the instructions from here to verify your contract on Etherscan:
 
 [Link](https://updraft.cyfrin.io/courses/foundry/foundry-simple-storage/verify-smart-contract-etherscan)
 
+Note: This is the manual way to verify your contract on Etherscan but it's prone to errors and not very recommended. We will learn to verify a contract programmatically in the next lessons.
+
 ## Cleaning up the project
 
 Forge has a built-in command to format our code that we should always run:
@@ -336,7 +338,7 @@ Forge has a built-in command to format our code that we should always run:
 
 Finally, include a `README.md` file. This file serves as a guide for anyone who wants to learn about your project, how to use it, or how to contribute to it.
 
-## Questions and Exercises
+## ❓ Questions and 💪 Exercises
 
 Question ❓: What are the different mining modes in `Anvil`?
 

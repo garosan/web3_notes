@@ -36,7 +36,11 @@ Go to the `lib` folder and you will see the newly installed `chainlink-brownie-c
 
 But now we need to indicate the correct path to our imports of where to look for these files, so in `foundry.toml` we need to add this:
 
-`remappings = ['@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/']`
+`remappings = ['@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/']`.
+
+Also, make sure that you're importing the correct path inside your contracts:
+
+`import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";`
 
 If you now try `forge compile` everything works correctly.
 
@@ -59,7 +63,7 @@ Let's also create a function called `testDemo`. Our file should look like this:
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -78,7 +82,7 @@ Let's update the contract to the following and run `forge test` again:
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 
@@ -112,7 +116,7 @@ And add some some console.logs:
 
 ```Solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity 0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
 
@@ -161,7 +165,7 @@ Our test file should look like this now:
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity 0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
 import {FundMe} from "../src/FundMe.sol";
@@ -310,7 +314,12 @@ function getVersion() public view returns (uint256){
 Too much stuff happening here, reference:
 https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/refactoring-testing
 
-## Links
+## ❓ Questions and 💪 Exercises
+
+Question ❓: What is this AggregatorV3Interface.sol file? What exactly does it do?
+Question ❓: You added some console.logs to your tests, you run `forge test` and you don't see them. What is missing?
+
+## 🛠️ Links and Resources
 
 - [Course Repo](https://github.com/Cyfrin/foundry-fund-me-cu)
 - [FunWithStorage Contract](https://github.com/Cyfrin/foundry-fund-me-cu/blob/main/src/exampleContracts/FunWithStorage.sol)
