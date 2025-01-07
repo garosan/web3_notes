@@ -2,7 +2,7 @@
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.26;
 
 contract SimpleStorage {
 
@@ -21,9 +21,6 @@ contract SimpleStorage {
 - `private`: Can be called by this contract only.
 - `external`: Only for functions. Can only be called by outside entities.
 - `internal`: Can be called by this contract and inherited contracts.
-
-❓Q: How can you tell apart a transaction that just sends ether from a transaction that deploys a contract?
-R.- For a deployment transaction, the bytecode of the contract is placed inside the data field, otherwise its empty.
 
 ### Calldata and Memory
 
@@ -97,6 +94,9 @@ If I deployed to Sepolia ETH this would cost according to Metamask:
 I instead deployed to Base Sepolia, [txn hash](https://sepolia.basescan.org/tx/0x71b7f357255c50f4ea819135e32eec088b07c506e23fb51e11c82c79fe08569a), the cost was around $0.001 USD.
 
 ## ❓ Questions and 💪 Exercises
+
+Question ❓: How can you tell apart a transaction that just sends ether from a transaction that deploys a contract?
+R.- For a deployment transaction, the bytecode of the contract is placed inside the data field, otherwise its empty.
 
 ## 🛠️ Links and Resources
 
