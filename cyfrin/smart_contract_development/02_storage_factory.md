@@ -96,7 +96,7 @@ We finally learn about inheritance with the `virtual` and `override` keywords.
 
 Exercise 💪: Create a contract `AnimalFactory` that includes a function `createAnimals`. This function must be capable of deploying the other 2 contracts `Cows` and `Birds`, which are simple contracts with just a constructor method.
 
-## Links
+## 🛠️ Links and Resources
 
 - [GitHub Repo](https://github.com/Cyfrin/remix-storage-factory-cu)
 - [Solidity Factory Pattern](https://betterprogramming.pub/learn-solidity-the-factory-pattern-75d11c3e7d29)

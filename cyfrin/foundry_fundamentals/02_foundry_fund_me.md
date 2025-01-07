@@ -225,7 +225,7 @@ It should look like this:
 ```solidity
 // SPDX-License_identifier: MIT
 
-pragma solidity ^0.8.18;
+pragma solidity 0.8.26;
 
 import {Script} from "forge-std/Script.sol";
 import {FundMe} from "../src/FundMe.sol";
@@ -246,14 +246,14 @@ In my case it was weirdly referencing `Counter.sol`, so I had to run `forge clea
 
 This course will cover 4 different types of tests:
 
-- **Unit tests**: Focus on isolating and testing individual smart contract functions or functionalities.
+- **Unit tests**: Focus on testing individual smart contract functions or functionalities.
 - **Integration tests**: Verify how a smart contract interacts with other contracts or external systems.
 - **Forking tests**: Forking refers to creating a copy of a blockchain state at a specific point in time. This copy, called a fork, is then used to run tests in a simulated environment.
 - **Staging tests**: Execute tests against a deployed smart contract on a staging environment before mainnet deployment.
 
 Coming back to our contracts, the central functionality of our protocol is the `fund` function.
 
-For that to work, we need to be sure that Aggregator V3 runs the current version. We know from previous courses that the version returned needs to be `4`. Let's put it to the test!
+For that to work, we need to be sure that AggregatorV3 runs the current version. We know from previous courses that the version returned needs to be `4`. Let's put it to the test!
 
 Add the following code to your test file:
 

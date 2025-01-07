@@ -96,7 +96,9 @@ If I deployed to Sepolia ETH this would cost according to Metamask:
 
 I instead deployed to Base Sepolia, [txn hash](https://sepolia.basescan.org/tx/0x71b7f357255c50f4ea819135e32eec088b07c506e23fb51e11c82c79fe08569a), the cost was around $0.001 USD.
 
-## Links
+## ❓ Questions and 💪 Exercises
+
+## 🛠️ Links and Resources
 
 - [Github Repo](https://github.com/Cyfrin/foundry-full-course-cu)
 - [Solidity Docs](https://docs.soliditylang.org/en/v0.8.28/)
