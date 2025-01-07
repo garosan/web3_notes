@@ -428,7 +428,7 @@ flipMoodNft:
 	@forge script script/Interactions.s.sol:FlipMoodNft $(NETWORK_ARGS)
 ```
 
-## Questions and Exercises
+## ❓ Questions and 💪 Exercises
 
 Question ❓: What does the `--no-commit` flag do?
 Question ❓: Why can't we just compare a string to a string in our Solidity tests and what's the solution?

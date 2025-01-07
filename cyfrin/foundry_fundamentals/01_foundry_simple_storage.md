@@ -322,7 +322,9 @@ Forge has a built-in command to format our code that we should always run:
 
 Finally, include a `README.md` file. This file serves as a guide for anyone who wants to learn about your project, how to use it, or how to contribute to it.
 
-## Links
+## Questions and Exercises
+
+## 🛠️ Links and Resources
 
 - [Foundry Docs](https://book.getfoundry.sh/)
 - [Course Repo](https://github.com/Cyfrin/Updraft/tree/main/courses/foundry)

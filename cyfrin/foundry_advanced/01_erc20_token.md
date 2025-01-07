@@ -8,7 +8,7 @@ cd erc-20
 forge init
 ```
 
-## Questions and Exercises
+## ❓ Questions and 💪 Exercises
 
 ## Links
 

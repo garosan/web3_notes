@@ -92,7 +92,7 @@ Every time you want to interact with another contract, you need:
 
 We finally learn about inheritance with the `virtual` and `override` keywords.
 
-## Exercises and Questions
+## ❓ Questions and 💪 Exercises
 
 Exercise 💪: Create a contract `AnimalFactory` that includes a function `createAnimals`. This function must be capable of deploying the other 2 contracts `Cows` and `Birds`, which are simple contracts with just a constructor method.
 
