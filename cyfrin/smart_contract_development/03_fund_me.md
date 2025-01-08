@@ -242,11 +242,158 @@ Since `getConversionRate` returns a value with 18 decimal places, we need to mul
 
 Let's deploy the `FundMe` contract to a testnet. After deployment, the `getPrice` function can be called to obtain the current value of Ethereum. It's also possible to send money to this contract, and an error will be triggered if the ETH amount is less than 5 USD.
 
+## `msg.sender` explained
+
+In this lesson, we will learn how to track addresses that are funding the contract and the amounts they will send to it.
+
+First, we will create an array of addresses:
+
+`address[] public funders;`
+
+Then, when someone sends money we will add their address to the array:
+
+`funders.push(msg.sender);`
+
+We can also map each funder's address to the amount they have sent using mappings:
+
+`mapping(address => uint256) public addressToAmountFunded;`
+
+Finally, the `addressToAmountFunded` mapping associates each funder's address with the total amount they have contributed. When a new amount is sent, we can add it to the user's total contribution:
+
+`addressToAmountFunded[msg.sender] += msg.value;`
+
+## Libraries
+
+When a functionality can be _commonly used_, we can create a **library** to efficiently manage repeated parts of codes
+
+- Solidity libraries are similar to contracts but do not allow the declaration of any **state variables** and **cannot receive ETH**.
+- All functions in a library must be declared as `internal`.
+
+We can start by creating a new file called `PriceConverter.sol`, and replace the `contract` keyword with `library`.
+
+Let's copy `getPrice`, `getConversionRate`, and `getVersion` functions from the `FundMe.sol` contract into our new library, remembering to import the `AggregatorV3Interface` into `PriceConverter.sol`. Finally, we can mark all the functions as `internal`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+
+library PriceConverter {
+    function getPrice() internal view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+        (, int256 answer, , , ) = priceFeed.latestRoundData();
+        return uint256(answer * 10000000000);
+    }
+
+    function getConversionRate(uint256 ethAmount) internal view returns (uint256) {
+        uint256 ethPrice = getPrice();
+        uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1000000000000000000;
+        return ethAmountInUsd;
+    }
+}
+```
+
+### Accessing the Library
+
+You can import the library in your contract and attach it to the desired type with the keyword `using`:
+
+```Solidity
+import {PriceConverter} from "./PriceConverter.sol";
+using PriceConverter for uint256;Accessing the Library
+```
+
+The `PriceConverter` functions can then be called as if they are native to the `uint256` type. For example, calling the `getConversionRate()` function will now be changed into:
+
+```solidity
+require(msg.value.getConversionRate() >= minimumUsd, "didn't send enough ETH");
+```
+
+Here, `msg.value`, which is a `uint256` type, is extended to include the `getConversionRate()` function. The `msg.value` gets passed as the first argument to the function. If additional arguments are needed, they are passed in parentheses:
+
+```solidity
+uint256 result = msg.value.getConversionRate(123);
+```
+
+In this case, `123` is passed as the second `uint256` argument to the function.
+
+## Resetting an array
+
+At this point, these notes are incomplete and are just for the purpose of roughly understanding the FundMe code.
+
+### Introduction
+
+In this section, we'll focus on one of the final steps to complete the `withdraw` function: effectively resetting the `funders` array.
+
+The simplest way to reset the `funders` array is similar to the method used with the mapping: iterate through all its elements and reset each one to 0. Alternatively, we can create a brand new `funders` array.
+
+```solidity
+funders = new address[]();
+```
+
+> 🗒️ **NOTE**:br
+> You might recall using the `new` keyword when deploying a contract. In this context, however, it resets the `funders` array to a zero-sized, blank address array.
+
+## Sending ETH from a contract
+
+This lesson explores three different methods of sending ETH from one account to another: `transfer`, `send`, and `call`. We will understand their differences, how each one works, and when to use one instead of another.
+
+### Transfer
+
+The `transfer` function is the simplest way to send Ether to a recipient address:
+
+```solidity
+payable(msg.sender).transfer(amount); // the current contract sends the Ether amount to the msg.sender
+```
+
+It's necessary to convert the recipient address to a **payable** address to allow it to receive Ether. This can be done by wrapping `msg.sender` with the `payable` keyword.
+
+However, `transfer` has a significant limitation. It can only use up to 2300 gas and it reverts any transaction that exceeds this gas limit, as illustrated by [Solidity by Example](https://solidity-by-example.org/sending-ether/).
+
+### Send
+
+The `send` function is similar to `transfer`, but it differs in its behaviour:
+
+```solidity
+bool success = payable(msg.sender).send(address(this).balance);
+require(success, "Send failed");
+```
+
+Like `transfer`, `send` also has a gas limit of 2300. If the gas limit is reached, it will not revert the transaction but return a boolean value (`true` or `false`) to indicate the success or failure of the transaction. It is the developer's responsibility to handle failure correctly, and it's good practice to trigger a **revert** condition if the `send` returns `false`.
+
+### Call
+
+The `call` function is flexible and powerful. It can be used to call any function **without requiring its ABI**. It does not have a gas limit, and like `send`, it returns a boolean value instead of reverting like `transfer`.
+
+```solidity
+(bool success, ) = payable(msg.sender).call{value: address(this).balance}("");
+require(success, "Call failed");
+```
+
+To send funds using the `call` function, we convert the address of the receiver to `payable` and add the value inside curly brackets before the parameters passed.
+
+The `call` function returns two variables: a boolean for success or failure, and a byte object which stores returned data if any.
+
+> 👀❗**IMPORTANT**:br
+> `call` is the recommended way of sending and receiving Ethereum or other blockchain native tokens.
+
+### Conclusion
+
+In conclusion, _transfer_, _send_, and _call_ are three unique methods for transferring Ether in Solidity. They vary in their syntax, behaviour, and gas limits, each offering distinct advantages and drawbacks.
+
 ## ❓ Questions and 💪 Exercises
 
-Exercise 💪:
+Exercise 💪: Implement a function `contributionCount` to monitor how many times a user calls the `fund` function to send money to the contract.
 
-Question ❓:
+Exercise 💪: Create a simple library called `MathLibrary` that contains a function `sum` to add two `uint256` numbers. Then create a function `calculateSum` inside the `fundMe` contract that uses the `MathLibrary` function.
+
+Exercise 💪: Implement a function `callAmountTo` using `call` to send Ether from the contract to an address provided as an argument. Ensure the function handles failures appropriately.
+
+Question ❓: What are interfaces in Solidity and why are they helpful?
+Question ❓: What are libraries in Solidity?
+Question ❓: What are the consequences if a library function is not marked as `internal`?
+Question ❓: What are the primary differences between _transfer_, _send_, and _call_ when transferring Ether?
+Question ❓: Why is it necessary to convert an address to a `payable` type before sending Ether to it?
 
 ## 🛠️ Links and Resources
 
@@ -255,3 +402,4 @@ Question ❓:
 - [Ether Units](https://docs.soliditylang.org/en/latest/units-and-global-variables.html#ether-units)
 - [Chainlink](https://chain.link/)
 - [Chainlink Docs](https://docs.chain.link/)
+- [Solidity by Example - Library](https://solidity-by-example.org/library/)
