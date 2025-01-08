@@ -381,6 +381,131 @@ The `call` function returns two variables: a boolean for success or failure, and
 
 In conclusion, _transfer_, _send_, and _call_ are three unique methods for transferring Ether in Solidity. They vary in their syntax, behaviour, and gas limits, each offering distinct advantages and drawbacks.
 
+## Using constructor to avoid hacks
+
+Currently, **anyone** can call the `withdraw` function and drain all the funds from the contract. To fix this, we need to **restrict** the withdrawal function to the contract owner.
+
+The constructor function is automatically called during contract deployment, within the same transaction that deploys the contract.
+
+We can use the constructor to set the contract's owner immediately after deployment:
+
+```solidity
+address public owner;
+constructor() {
+    owner = msg.sender;
+}
+```
+
+Here, we initialize the state variable `owner` with the contract deployer's address (`msg.sender`).
+
+### Modifying the Withdraw Function
+
+The next step is to update the `withdraw` function to ensure it can only be called by the owner:
+
+```solidity
+function withdraw() public {
+    require(msg.sender == owner, "must be owner");
+    // rest of the function here
+}
+```
+
+Before executing any withdrawal actions, we check that `msg.sender` is the owner. If the caller is not the owner, the operation **reverts** with the error message "must be the owner" This access restriction ensures that only the intended account can execute the function.
+
+### Conclusion
+
+By incorporating a constructor to assign ownership and updating the withdraw function to restrict access, we have significantly improved the security of the fundMe contract. These changes ensure that only the contract owner can withdraw funds, preventing unauthorized access.
+
+## Solidity function modifiers
+
+In this lesson, we will explore **modifiers** and how they can simplify code writing and management in Solidity. Modifiers enable developers to create reusable code snippets that can be applied to multiple functions, enhancing code readability, maintainability, and security.
+
+### Repeated Conditions
+
+If we build a contract with multiple _administrative functions_, that should only be executed by the contract owner, we might repeatedly check the caller identity:
+
+```solidity
+require(msg.sender == owner, "Sender is not owner");
+```
+
+However, repeating this line in every function clutters the contract, making it harder to read, maintain, and debug.
+
+### Modifiers
+
+Modifiers in Solidity allow embedding **custom lines of code** within any function to modify its behaviour.
+
+Here's how to create a modifier:
+
+```solidity
+modifier onlyOwner {
+    require(msg.sender == owner, "Sender is not owner");
+    _;
+}
+```
+
+> 🗒️ **NOTE**:br
+> The modifier is named `onlyOwner` to reflect the condition it checks.
+
+### The `_` (underscore)
+
+The underscore `_` placed in the body is a placeholder for the modified function's code. When the function with the modifier is called, the code before `_` runs first, and if it succeeds, the function's code executes next.
+
+For example, the `onlyOwner` modifier can be applied to the `withdraw` function like this:
+
+```solidity
+function withdraw(uint amount) public onlyOwner {
+    // Function logic
+}
+```
+
+When `withdraw` is called, the contract first executes the `onlyOwner` modifier. If the `require` statement passes, the rest of the `withdraw` function executes.
+
+If the underscore `_` were placed before the `require` statement, the function's logic would execute first, followed by the `require` check, which is not the intended use case.
+
+### Conclusion
+
+Using modifiers like `onlyOwner` simplifies contract development by centralizing common conditions, reducing code repetition, and enhancing contract readability and maintainability.
+
+## Deploying to testnet and end to end testing
+
+First, deploy to Sepolia testnet, and then:
+
+### Contract Interaction
+
+After successfully deploying the `FundMe` contract, you'll see several buttons to interact with it:
+
+- **Red button**: Payable functions (e.g., `fund`)
+- **Orange button**: Non-payable functions (e.g., `withdraw`)
+- **Blue buttons**: `view` and `pure` functions
+
+The `fund` function allows us to send ETH to the contract (minimum 5 USD). The `owner` of the contract is our MetaMask account, as the **constructor** sets the deployer as the owner.
+
+> 🗒️ **NOTE**:br
+> If the `fund` function is called without any value or with less than 5 USD, you will encounter a gas estimation error, indicating insufficient ETH, and gas will be wasted.
+
+### Successful Transaction
+
+If you set the amount to `0.1 ETH` and confirm it in MetaMask, you can then track the successful transaction on Etherscan. In the Etherscan transaction log, you will see that the `fundMe` balance has increased by `0.1 ETH`. The `funders` array will register your address, and the mapping `addressToAmountFunded` will record the amount of ETH sent.
+
+### Withdraw Function and Errors
+
+After funding the contract, we can initiate the `withdraw` function. This function can only be called by the owner; if a non-owner account attempts to withdraw, a gas estimation error will be thrown, and the function will revert.
+
+Upon successful withdrawal, the `fundMe` balance, the `addressToAmountFunded` mapping, and the `funders` array will all reset to zero.
+
+### Conclusion
+
+In this lesson, we've explored the end-to-end process of deploying and interacting with a Solidity contract using Remix and MetaMask. We covered the deployment transaction, contract interaction, and how to handle successful transactions and potential errors.
+
+## Immutability and constants
+
+The variables `owner` and `minimumUSD` are set one time and they never change their value: `owner` is assigned during contract creation, and `minimumUSD` is initialized at the beginning of the contract.
+
+> Naming conventions for `constant` are all caps with underscores in place of spaces (e.g., `MINIMUM_USD`).
+
+While `constant` variables are for values known at compile time, `immutable` can be used for variables set at deployment time that will not change. The naming convention for `immutable` variables is to add the prefix `i_` to the variable name (e.g., `i_owner`).
+
+## Creating custom errors
+
 ## ❓ Questions and 💪 Exercises
 
 Exercise 💪: Implement a function `contributionCount` to monitor how many times a user calls the `fund` function to send money to the contract.
@@ -389,11 +514,16 @@ Exercise 💪: Create a simple library called `MathLibrary` that contains a func
 
 Exercise 💪: Implement a function `callAmountTo` using `call` to send Ether from the contract to an address provided as an argument. Ensure the function handles failures appropriately.
 
+Exercise 💪: Implement a modifier named `onlyAfter(uint256 _time)` that ensures a function can only be executed after a specified time.
+
+Exercise 💪: Interact with the `FundMe` contract on Remix and explore all possible outcomes that its functions can lead to.
+
 Question ❓: What are interfaces in Solidity and why are they helpful?
 Question ❓: What are libraries in Solidity?
 Question ❓: What are the consequences if a library function is not marked as `internal`?
 Question ❓: What are the primary differences between _transfer_, _send_, and _call_ when transferring Ether?
 Question ❓: Why is it necessary to convert an address to a `payable` type before sending Ether to it?
+Question ❓: Why is it beneficial to use `modifiers` for access control?
 
 ## 🛠️ Links and Resources
 
