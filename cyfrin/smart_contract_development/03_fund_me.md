@@ -506,6 +506,98 @@ While `constant` variables are for values known at compile time, `immutable` can
 
 ## Creating custom errors
 
+### Require
+
+One way to improve gas efficiency is by optimizing our `require` statements. Currently, the `require` statement forces us to store the string 'sender is not an owner'. Each character in this string is stored individually, making the logic to manage it complex and expensive.
+
+### Custom Errors
+
+Introduced in **Solidity 0.8.4**, custom errors can be used in `revert` statements. These errors should be declared at the top of the code and used in `if` statements. The cheaper error code is then called in place of the previous error message string, reducing gas costs.
+
+We can start by creating a custom error:
+
+```solidity
+error NotOwner();
+```
+
+Then, we can replace the `require` function with an `if` statement, using the `revert` function with the newly created error:
+
+```solidity
+if (msg.sender != i_owner) {
+    revert NotOwner();
+}
+```
+
+By implementing custom errors, we reduce gas costs and simplify error handling in our smart contracts.
+
+### Conclusion
+
+In this lesson, we have learned how to further optimize gas efficiency in Solidity contracts by using custom errors instead of traditional require statements with strings.
+
+## Receive and fallback functions
+
+In Solidity, if Ether is sent to a contract without a `receive` or `fallback` function, the transaction will be **rejected**, and the Ether will not be transferred. In this lesson, we'll explore how to handle this scenario effectively.
+
+### receive and fallback functions
+
+`receive` and `fallback` are _special functions_ triggered when users send Ether directly to the contract or call non-existent functions. These functions do not return anything and must be declared `external`.
+
+To illustrate, let's create a simple contract:
+
+```solidity
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
+
+contract FallbackExample {
+    uint256 public result;
+
+    receive() external payable {
+        result = 1;
+    }
+
+    fallback() external payable {
+        result = 2;
+    }
+}
+```
+
+In this contract, `result` is initialized to zero. When Ether is sent to the contract, the `receive` function is triggered, setting `result` to one. If a transaction includes **data** but the specified function _does not exist_, the `fallback` function will be triggered, setting `result` to two. For a comprehensive explanation, refer to [SolidityByExample](https://solidity-by-example.org/fallback/).
+
+```text
+// Ether is sent to contract
+//      is msg.data empty?
+//          /   \
+//         yes  no
+//         /     \
+//    receive()?  fallback()
+//     /   \
+//   yes   no
+//  /        \
+//receive()  fallback()
+```
+
+### Sending Ether to fundMe
+
+When a user sends Ether **directly** to the `fundMe` contract without calling the `fund` function, the `receive` function can be used to _redirect_ the transaction to the `fund` function:
+
+```solidity
+receive() external payable {
+    fund();
+}
+
+fallback() external payable {
+    fund();
+}
+```
+
+To test this functionality, send some Sepolia Ether to the `fundMe` contract using MetaMask. This does not directly call the `fund` function, but the `receive` function will trigger it. After confirming the transaction, you can check the `funders` array to see that it has been updated, reflecting the successful invocation of the `fund` function by the `receive` function.
+
+This approach ensures that all transactions are processed as intended. Although directly calling the `fund` function costs less gas, this method ensures the user's contribution is properly acknowledged and credited.
+
+### Conclusion
+
+By implementing `receive` and `fallback` functions, contracts can handle direct Ether transfers and non-existent function calls effectively, ensuring that transactions are processed as intended and users' contributions are properly tracked.
+
 ## ❓ Questions and 💪 Exercises
 
 Exercise 💪: Implement a function `contributionCount` to monitor how many times a user calls the `fund` function to send money to the contract.
@@ -518,12 +610,17 @@ Exercise 💪: Implement a modifier named `onlyAfter(uint256 _time)` that ensure
 
 Exercise 💪: Interact with the `FundMe` contract on Remix and explore all possible outcomes that its functions can lead to.
 
+Exercise 💪: Create a custom error that is triggered when msg.sender is address(0) and then convert it into an equivalent if statement with a `revert` function.
+
 Question ❓: What are interfaces in Solidity and why are they helpful?
 Question ❓: What are libraries in Solidity?
 Question ❓: What are the consequences if a library function is not marked as `internal`?
 Question ❓: What are the primary differences between _transfer_, _send_, and _call_ when transferring Ether?
 Question ❓: Why is it necessary to convert an address to a `payable` type before sending Ether to it?
 Question ❓: Why is it beneficial to use `modifiers` for access control?
+Question ❓: What are the benefits of declaring custom errors instead of using the `require` keyword?
+Question ❓: How does the `fallback` function differ from the `receive` function?
+Question ❓: What does it happen when Ether is sent with _data_ but in the contract only a `receive` function exist?
 
 ## 🛠️ Links and Resources
 
