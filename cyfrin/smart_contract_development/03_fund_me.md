@@ -200,6 +200,48 @@ function getLatestPrice() public view returns (uint256) {
 
 This complete `getLatestPrice` function retrieves the latest price, adjusts the decimal places, and converts the value to an unsigned integer, making it compatible for its use inside other functions.
 
+## Solidity math
+
+So up to now, we have `getPrice()` and `getConversionRate()` functions.
+
+The `getPrice` function returns the current value of Ethereum in USD as a `uint256`.
+The `getConversionRate` function converts a specified amount of ETH to its USD equivalent.
+
+In Solidity, only integer values are used, as the language does not support floating-point numbers.
+
+```solidity
+function getConversionRate(uint256 ethAmount) internal view returns (uint256) {
+    uint256 ethPrice = getPrice();
+    uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1e18;
+    return ethAmountInUsd;
+}
+```
+
+> The line `uint256 ethAmountInUsd = (ethPrice * ethAmount)` results in a value with a precision of 1e18 \* 1e18 = 1e36. To bring the precision of `ethAmountInUsd` back to 1e18, we need to divide the result by 1e18.
+
+**Always multiply before dividing to maintain precision and avoid truncation errors.**
+
+### Example of `getConversionRate`
+
+- `ethAmount` is set at 1 ETH, with 1e18 precision.
+- `ethPrice` is set at 2000 USD, with 1e18 precision, resulting in 2000e18.
+- `ethPrice * ethAmount` results in 2000e36.
+- To scale down `ethAmountInUsd` to 1e18 precision, divide `ethPrice * ethAmount` by 1e18.
+
+### Checking Minimum USD Value
+
+We can verify if users send at least 5 USD to our contract:
+
+```solidity
+require(getConversionRate(msg.value) >= MINIMUM_USD, "You need to spend more ETH!");
+```
+
+Since `getConversionRate` returns a value with 18 decimal places, we need to multiply `5` by `1e18`, resulting in `5 * 1e18` (equivalent to `5 * 10**18`).
+
+### Deployment to the Testnet
+
+Let's deploy the `FundMe` contract to a testnet. After deployment, the `getPrice` function can be called to obtain the current value of Ethereum. It's also possible to send money to this contract, and an error will be triggered if the ETH amount is less than 5 USD.
+
 ## ❓ Questions and 💪 Exercises
 
 Exercise 💪:
