@@ -118,6 +118,88 @@ contract GoldPriceContract {
 }
 ```
 
+## Solidity interfaces
+
+Let's continue writing code for our `FundMe.sol` contract and create these 2 functions:
+
+```solidity
+function getPrice() public {}
+function getConversionRate() public {}
+```
+
+You can see all about Chainlink Data Feeds in [this](https://docs.chain.link/data-feeds) link.
+
+Now to interact with the Chainlink contract that will give us the price data, we will need its address and ABI. You can get the contract address from this page:
+
+- [Price Feed Contract Addresses Page](https://docs.chain.link/data-feeds/price-feeds/addresses?network=ethereum&page=1)
+
+What about the ABI? Well if we think about it, the ABI is basically just a detail of the functions of a contract and their properties, like if the function is payable, external, etc. There are other ways to call the functions of an external smart contract like knowing the function selector, but for now, we will use an _interface_.
+
+Basically what an interface does in this case is it is just code for the functions and their properties, signatures, etc. (like an ABI!) so we will import the `AggregatorV3Interface` from Chainlink and use it.
+
+## Import from GitHub
+
+Let's import the `AggregatorV3Interface` from GitHub instead of what Patrick did of copying the whole interface into the file.
+
+```solidity
+ pragma solidity 0.8.26;
+ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+ contract FundMe {}
+```
+
+## Getting real world data from Chainlink
+
+So, to recap the `AggregatorV3Interface` provides a streamlined ABI for interacting with the Data Feed contract.
+
+Back to our code, first we need to declare a new variable, `priceFeed`, of type `AggregatorV3Interface` and pass it the correct contract address:
+
+`AggregatorV3Interface priceFeed = AggregatorV3Interface(0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43);`
+
+Then, we will use the `latestRoundData()` function, first let's take a look at its signature:
+
+`function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);`
+
+For now, we will focus on the `answer` value in our code:
+
+```solidity
+function getLatestPrice() public view returns (int) {
+    (,int price,,,) = priceFeed.latestRoundData();
+    return price;
+}
+```
+
+Our `getLatestPrice()` function now retrieves the latest ETH price in USD from the `latestRoundData()` function of the Data Feed contract.
+
+### Decimals
+
+- `msg.value` is a `uint256` value with 18 decimal places.
+- `answer` is an `int256` value with 8 decimal places (USD-based pairs use 8 decimal places, while ETH-based pairs use 18 decimal places).
+
+This means the `price` returned from our `latestRoundData` function isn't directly compatible with `msg.value`. To match the decimal places, we multiply `price` by 1e10:
+
+```solidity
+return price * 1e10;
+```
+
+### Typecasting
+
+Typecasting, or type conversion, involves converting a value from one data type to another. In Solidity, not all data types can be converted due to differences in their underlying representations and the potential for data loss. However, certain conversions, such as from `int` to `uint`, are allowed.
+
+```solidity
+return uint(price) * 1e10;
+```
+
+We can finalize our `view` function as follows:
+
+```solidity
+function getLatestPrice() public view returns (uint256) {
+    (,int answer,,,) = priceFeed.latestRoundData();
+    return uint(answer) * 1e10;
+}
+```
+
+This complete `getLatestPrice` function retrieves the latest price, adjusts the decimal places, and converts the value to an unsigned integer, making it compatible for its use inside other functions.
+
 ## ❓ Questions and 💪 Exercises
 
 Exercise 💪:
