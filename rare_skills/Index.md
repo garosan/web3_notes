@@ -42,7 +42,7 @@
   - Common Solidity Beginner Mistakes
   - Solidity Beginner Projects
 - Intermediate Topics
-  - Detecting if an address is a smart contract
+  - [Detecting if an address is a smart contract](./intermediate_topics/detecting_if_an_address.md)
   - Solidity Function Selector
   - ERC-721 design and security issues
   - ERC-4626
