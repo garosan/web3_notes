@@ -4,7 +4,7 @@
 - [Notion Guide](https://encodeclub.notion.site/EVM-Bootcamp-Q4-2024-84ef51c6eb20450f8100729c2df48329)
 - [Repo](https://github.com/Encode-Club-Solidity-Bootcamp)
 
-## Curriculum
+## 📄 Curriculum
 
 - Week 1: Intro to Blockchain
 - Week 2: Solidity Introduction
@@ -68,3 +68,11 @@
 - [Lesson 22](https://github.com/Encode-Club-Solidity-Bootcamp/Lesson-22)
 - [Lesson 23](https://github.com/Encode-Club-Solidity-Bootcamp/Lesson-23)
 - [Lesson 24](https://github.com/Encode-Club-Solidity-Bootcamp/Lesson-24)
+
+## 🛠️ Links and Resources
+
+- [Solidity Docs](https://docs.soliditylang.org/en/latest/)
+- [Solidity Style Guide](https://docs.soliditylang.org/en/latest/style-guide.html)
+- [NatSpec Format](https://docs.soliditylang.org/en/latest/natspec-format.html#natspec)
+
+- [Ethereum Improvement Proposals](https://eips.ethereum.org/)
