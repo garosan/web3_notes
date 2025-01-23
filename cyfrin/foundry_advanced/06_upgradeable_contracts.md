@@ -38,8 +38,17 @@ There are a ton of proxy methodologies, but three are worth discussing here:
 
 Each has its benefits and drawbacks, but the focus is on maintaining contract functionality and decentralization.
 
+## Using delegatecall
+
+In this section we're going to be learning how to build our own proxies and in order to do this we first need an understanding of the delegateCall function.
+
+## Overview of EIP-1967
+
+In this lesson we'll apply what we've learnt and get our hands dirty with a small proxy example. The code for this exercise can be found **[here](https://github.com/Cyfrin/foundry-upgrades-f23/tree/main/src/sublesson)**.
+
 ## ❓ Questions and 💪 Exercises
 
 ## 🛠️ Links and Resources
 
 - [Trail of Bits - Contract upgrade anti-patterns](https://blog.trailofbits.com/2018/09/05/contract-upgrade-anti-patterns/)
+- [Yul Docs](https://docs.soliditylang.org/en/latest/yul.html)
