@@ -2,7 +2,7 @@
 
 📕 Title: How To DeFi: Advanced
 
-👨‍💻 Authors: Darren Lau, Daryl Lau, Teh Sze Jin and more
+👨‍💻 Authors: Lucius Fang, Benjamin Hor, Erina Azmi
 
 📚 Publisher: CoinGecko
 
@@ -10,7 +10,7 @@
 
 💾 Topics: DeFi
 
-📄 Pages: 229
+📄 Pages:
 
 ## 📝 Table of Contents
 
