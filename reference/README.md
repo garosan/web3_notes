@@ -1,33 +1,8 @@
-# 💳📲 Reference of DeFi and Blockchain Related Products and Resources
+# 💳📲 DeFi and Blockchain Reference, Resources and Products
 
 - 👥 [For General Users](./general_user.md)
 - 💵 [For Investors and Traders](./investor.md)
 - 🧑‍💻 [For Developers, Builders and Security Researchers](./developer.md)
-
-## 📈 For Investors, Traders and General Users
-
-### Lending & Borrowing
-
-- [Aave](https://aave.com/)
-- [Maker](https://makerdao.com/en/)
-
-### Stablecoins and Stableassets
-
-### Derivatives
-
-- [Synthetix](https://synthetix.io/)
-
-### DEXes
-
-- [Uniswap](https://uniswap.org/)
-- [Sushiswap](https://www.sushi.com/)
-- [Pancakeswap](https://pancakeswap.finance/)
-- [Aerodrome](https://aerodrome.finance/)
-- [Raydium](https://raydium.io/)
-
-### Staking and Liquid Staking
-
-- [Lido](https://lido.fi/)
 
 ### Infrastructure
 

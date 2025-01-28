@@ -8,9 +8,10 @@
 - [CryptoZombies](https://cryptozombies.io/)
 - [Teach Yourself Computer Science](https://teachyourselfcs.com/)
 
-## News
-
 ## Frameworks
+
+- [Hardhat](https://hardhat.org/)
+- [Foundry](https://getfoundry.sh/)
 
 ## Languages
 
@@ -43,12 +44,20 @@
 - [DeFi Security Summit](https://www.youtube.com/@defisecuritysummit2088)
 - [Andy Li](https://www.youtube.com/@andyli)
 - [@hackenproof](https://www.youtube.com/@hackenproof)
+- [Patrick Collins](https://www.youtube.com/@PatrickAlphaC)
 
 ## Security Challenges
 
 - [Damn Vulnerable DeFi](https://www.damnvulnerabledefi.xyz/)
 - [Capture the Ether](https://capturetheether.com/)
 - [The Ethernaut](https://ethernaut.openzeppelin.com/)
+
+## Competitive Audits
+
+- [CodeHawks](https://codehawks.cyfrin.io/)
+- [Code4rena](https://code4rena.com/)
+- [Immunefi](https://immunefi.com/)
+- [Sherlock](https://www.sherlock.xyz/)
 
 - Chainlink
   - CCIP
@@ -60,3 +69,5 @@
 - OpenZeppelin
 - Morpho
 - Tenderly
+
+## EIPs
