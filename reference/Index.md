@@ -1,6 +1,10 @@
-# 💳📲 List of DeFi and Blockchain Related Products, Services and Resources
+# 💳📲 Reference of DeFi and Blockchain Related Products and Resources
 
-## 📈💵 For Investors, Traders and General Users
+- 👥 [For General Users](./general_user.md)
+- 💵 [For Investors and Traders](./investor.md)
+- 🧑‍💻 [For Developers, Builders and Security Researchers](./developer.md)
+
+## 📈 For Investors, Traders and General Users
 
 ### Lending & Borrowing
 
@@ -39,21 +43,9 @@
 
 ### Podcasts
 
-### News
-
-- [Cointelegraph](https://cointelegraph.com/)
-- [Coindesk](https://www.coindesk.com/)
-- [The Defiant](https://thedefiant.io/)
-- [Coinage](https://www.coinage.media/)
-- [Decrypt](https://decrypt.co/)
-
-### Tools/Analytics
-
-- [DefiLlama](https://defillama.com/)
-
 ### Youtube Channels - Other Media
 
-## 🧑‍💻👷‍♀️ For Developers, Builders and Security Researchers
+## 👷‍♀️ For Developers, Builders and Security Researchers
 
 ## 🛠️ Other Links and Resources
 
