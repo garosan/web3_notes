@@ -6,10 +6,6 @@
 
 ### Infrastructure
 
-### Fixed-Interest Rate Protocols
-
-### Yield Aggregators
-
 ### Oracles
 
 - [Chainlink](https://chain.link/)
@@ -37,3 +33,8 @@
   - Synthetics
 
 https://thedefiant.io/the-defiants-definitive-guide-to-defi
+
+## Blogs and Articles
+
+- [Blockchain at Berkeley](https://calblockchain.mirror.xyz/)
+- [The Daily Ape](https://thedailyape.notion.site/The-Daily-Ape-c96c0b6727c0433a962e897ef43efb7e)

@@ -7,6 +7,13 @@
 
 ## Stablecoins and Stableassets
 
+## Yield Aggregators
+
+- [DeSyn](https://www.desyn.io/#/)
+- [Beefy](https://beefy.finance/)
+- [Yearn Finance](https://yearn.fi/)
+- [List #1](https://defiprime.com/yield-aggregators)
+
 ## Derivatives
 
 - [Synthetix](https://synthetix.io/)
@@ -19,3 +26,7 @@
 
 - [Lido](https://lido.fi/)
 - [EigenLayer](https://www.eigenlayer.xyz/)
+
+## Fixed-Interest Rate Protocols
+
+- [Saffron Finance](https://www.saffron.finance/)

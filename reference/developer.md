@@ -37,6 +37,17 @@
 - [Damn Vulnerable DeFi Creator & ETH Security Researcher Tincho | Full Interview](https://www.youtube.com/watch?v=bYdiF06SLWc)
 - [The Red Guild](https://theredguild.org/)
 
+- Chainlink
+  - CCIP
+  - Data Feeds
+  - Data Streams
+  - Functions
+  - Automation
+  - VRF
+- OpenZeppelin
+- Morpho
+- Tenderly
+
 ## Youtube Channels and Other Media
 
 - [JohnnyTime - Security Researcher](https://www.youtube.com/@JohnnyTime)
@@ -59,15 +70,8 @@
 - [Immunefi](https://immunefi.com/)
 - [Sherlock](https://www.sherlock.xyz/)
 
-- Chainlink
-  - CCIP
-  - Data Feeds
-  - Data Streams
-  - Functions
-  - Automation
-  - VRF
-- OpenZeppelin
-- Morpho
-- Tenderly
+## Blogs and Blog Articles
+
+- [](https://calblockchain.mirror.xyz/c56CHOu-Wow_50qPp2Wlg0rhUvdz1HLbGSUWlB_KX9o)
 
 ## EIPs
