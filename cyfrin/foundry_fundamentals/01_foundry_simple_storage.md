@@ -185,7 +185,7 @@ Impersonate Vitalik's account:
 
 Send ETH from the impersonated account:
 
-`cast send 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --value 1ether --from 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 --unlocked --rpc-url http://127.0.0.1:8545`
+`cast send 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --value 432ether --from 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 --unlocked --rpc-url http://127.0.0.1:8545`
 
 Verify your new balance:
 
@@ -193,7 +193,7 @@ Verify your new balance:
 
 Stop impersonating:
 
-`cast rpc anvil_stopImpersonatingAccount <WHALER_ADDRESS> --rpc-url http://127.0.0.1:8545`
+`cast rpc anvil_stopImpersonatingAccount 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 --rpc-url http://127.0.0.1:8545`
 
 
 ## Deploy using a script
@@ -301,6 +301,16 @@ Block Hash: 0x2472ac00b89c5894fcbd92ccce0dd96530df256061f2c33118b6b23bda660cd8
 Block Time: "Sat, 21 Dec 2024 07:40:11 +0000"
 ```
 
+So just to reiterate:
+
+- When you run `forge script script/DeploySimpleStorage.s.sol` with Anvil not running, Foundry automatically spins up a temporary in-memory blockchain (Anvil) just for the script execution. The contract deployment is simulated and no actual blockchain state is modified.
+
+- When you run `forge script script/DeploySimpleStorage.s.sol` with Anvil running, Foundry still runs the script in a simulated mode and no contract is deployed but we get a `broadcast/` folder.
+
+- When you run `forge script script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --broadcast --private-key <PRIVATE_KEY>` Foundry connects to the running Anvil instance and actually sends the deployment transaction.
+
+
+
 ## What is a transaction
 
 What you need to remember here is that a `broadcast` folder was created. Look inside in the `run-latest.json` file and you'll see this:
@@ -404,6 +414,56 @@ Forge has a built-in command to format our code that we should always run:
 `forge fmt`
 
 Finally, include a `README.md` file. This file serves as a guide for anyone who wants to learn about your project, how to use it, or how to contribute to it.
+
+## 🔎 Testing
+
+At the very, very minimum, get used to ask chatGPT to write you some tests for your contract:
+
+Create a `test/SimpleStorageTest.t.sol` file.
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import "forge-std/Test.sol";
+import "../src/SimpleStorage.sol";
+
+contract SimpleStorageTest is Test {
+    SimpleStorage public simpleStorage;
+
+    function setUp() public {
+        // Deploy the contract before each test
+        simpleStorage = new SimpleStorage();
+    }
+
+    function test_InitialFavoriteNumber_ShouldBeZero() public view {
+        uint256 storedValue = simpleStorage.retrieve();
+        assertEq(storedValue, 0, "Initial favorite number should be 0");
+    }
+
+    function test_StoreNumber_ShouldUpdateValue() public {
+        simpleStorage.store(42);
+        uint256 storedValue = simpleStorage.retrieve();
+        assertEq(storedValue, 42, "Stored number should be 42");
+    }
+
+    function test_AddPerson_ShouldStoreInList() public {
+        simpleStorage.addPerson("Alice", 7);
+        (uint256 storedNumber, string memory storedName) = simpleStorage
+            .listOfPeople(0);
+        assertEq(storedNumber, 7, "Stored favorite number should be 7");
+        assertEq(storedName, "Alice", "Stored name should be Alice");
+    }
+
+    function test_AddPerson_ShouldMapNameToNumber() public {
+        simpleStorage.addPerson("Bob", 99);
+        uint256 storedNumber = simpleStorage.nameToFavoriteNumber("Bob");
+        assertEq(storedNumber, 99, "Mapping should return correct number");
+    }
+}
+```
+
+Run `forge test` and everything should pass.
 
 ## ❓ Questions and 💪 Exercises
 
