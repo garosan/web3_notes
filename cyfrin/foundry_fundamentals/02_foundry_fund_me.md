@@ -497,6 +497,149 @@ function testOwnerIsMsgSender() public {
 
 Run `forge test --fork-url $SEPOLIA_RPC_URL` again. Everything should work now.
 
+## Deploying a mock priceFeed
+
+The problem: So we've come a long way but we still need to call `--fork-url` with our tests, otherwise if we just run `forge test`, our `testPriceFeedVersionIsAccurate()` test function is going to fail because such contract doesn't exist in our local Anvil blockchain. And we don't want to be calling our `SEPOLIA_RPC_URL` every time we run tests, or we're going to run out of credits very easily. Enter mocks.
+
+We are going to write a mock priceFeed to interact with in our local Anvil blockchain for the duration of our local tests.
+
+Create a file in `script/HelperConfig.s.sol`.
+
+We want to achieve 2 things:
+
+- Deploy mocks when we are on a local anvil chain
+- Keep track of contract addresses across different chains
+
+Let's begin by setting the 2 functions that we're gonna need:
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.26;
+
+import {Script} from "forge-std/Script.sol";
+
+contract HelperConfig {
+    function getSepoliaEthConfig() public pure {
+        // priceFeed address
+    }
+
+    function getAnvilEthConfig() public pure {
+        // priceFeed address
+    }
+}
+```
+
+Now instead of passing a bunch of variables with everything we need, let's create a struct for our configuration.
+
+Our file should look like this now:
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.26;
+
+import {Script} from "forge-std/Script.sol";
+
+contract HelperConfig {
+    NetworkConfig public activeNetworkConfig;
+
+    struct NetworkConfig {
+        address priceFeed; // ETH/USD price feed address
+    }
+
+    constructor() {
+        if (block.chainid == 11155111) {
+            activeNetworkConfig = getSepoliaEthConfig();
+        } else {
+            activeNetworkConfig = getAnvilEthConfig();
+        }
+    }
+
+    function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
+        // priceFeed address
+        NetworkConfig memory sepoliaConfig = NetworkConfig({
+            priceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306
+        });
+        return sepoliaConfig;
+    }
+
+    function getAnvilEthConfig() public pure returns (NetworkConfig memory) {
+        // priceFeed address
+    }
+}
+```
+
+Now let's modify our deploy script to include our new `HelperConfig`:
+
+```solidity
+// SPDX-License_identifier: MIT
+
+pragma solidity 0.8.26;
+
+import {Script} from "forge-std/Script.sol";
+import {FundMe} from "../src/FundMe.sol";
+import {HelperConfig} from "./HelperConfig.s.sol";
+
+contract DeployFundMe is Script {
+    function run() external returns (FundMe) {
+        HelperConfig helperConfig = new HelperConfig();
+        address ethUsdPriceFeed = helperConfig.activeNetworkConfig();
+
+        vm.startBroadcast();
+        FundMe fundMe = new FundMe(ethUsdPriceFeed);
+        vm.stopBroadcast();
+        return fundMe;
+    }
+}
+```
+
+If we now run `forge test --fork-url $SEPOLIA_RPC_URL` the test should pass correctly.
+
+## 💪 Exercises Time
+
+Now let's do a little exercise. What if I want to test this on Base Sepolia? or Optimism Sepolia?
+
+I already have my RPC_URL configured for Optimism Sepolia so let me run:
+
+`forge test --fork-url $OPTIMISM_SEPOLIA_RPC_URL`
+
+Failed ❌! Hmm 🤔 sounds like we have to adjust our `HelperConfig.s.sol`, hopefully it's straight forward:
+
+We need:
+
+- The correct `chainid` from [ChainList](https://chainlist.org/)
+- We need the correct price feed address from [ChainLink](https://docs.chain.link/data-feeds/price-feeds/addresses)
+
+In `HelperConfig.s.sol` our `constructor()` is now:
+
+```solidity
+constructor() {
+    if (block.chainid == 11155111) {
+        activeNetworkConfig = getSepoliaEthConfig();
+    } else if (block.chainid == 11155420) {
+        activeNetworkConfig = getOptimismSepoliaConfig();
+    } else {
+        activeNetworkConfig = getAnvilEthConfig();
+    }
+}
+```
+
+Our new function:
+
+```solidity
+    function getOptimismSepoliaConfig()
+        public
+        pure
+        returns (NetworkConfig memory)
+    {
+        NetworkConfig memory opSepoliaConfig = NetworkConfig({
+            priceFeed: 0x61Ec26aA57019C486B10502285c5A3D4A4750AD7
+        });
+        return opSepoliaConfig;
+    }
+```
+
 ## ❓ Questions and 💪 Exercises
 
 - Question ❓: What is this AggregatorV3Interface.sol file? What exactly does it do?
