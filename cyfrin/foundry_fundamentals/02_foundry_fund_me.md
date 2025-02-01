@@ -260,18 +260,20 @@ For that to work, we need to be sure that AggregatorV3 runs the current version.
 Add the following code to your test file:
 
 ```solidity
-function testPriceFeedVersionIsAccurate() public {
+function testPriceFeedVersionIsAccurate() public view {
     uint256 version = fundMe.getVersion();
     assertEq(version, 4);
 
 }
 ```
 
-It ... fails. But why? Looking through the code we see this AggregatorV3 address `0x694AA1769357215DE4FAC081bf1f309aDC325306` over and over again. The address is correct, is the Sepolia deployment of the AggregatorV3 contract. But our tests use Anvil for testing purposes, so that doesn't exist.
+It ... fails. But why? Looking through the code we see this AggregatorV3 address `0x694AA1769357215DE4FAC081bf1f309aDC325306` over and over again. The address is correct, its the Sepolia deployment of the AggregatorV3 contract. But our tests use Anvil for testing purposes, so that doesn't exist.
 
 Let's use this to run tests just for the function we care about:
 
 `forge test --mt testPriceFeedVersionIsAccurate`
+
+As a curiosity if you had two functions named the same in different files, the above will run both functions.
 
 But back to our problem, how can we fix it?
 
@@ -313,8 +315,187 @@ function getVersion() public view returns (uint256){
 }
 ```
 
-Too much stuff happening here, reference:
-https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/refactoring-testing
+Ok, so basically we are changing our `FundMe.sol` and `PriceConverter.sol` files to not hardcode the address for the priceFeed, but rather provide it at deploy time.
+
+Our files should look like this:
+
+`FundMe.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {PriceConverter} from "./PriceConverter.sol";
+
+error FundMe__NotOwner();
+
+contract FundMe {
+    using PriceConverter for uint256;
+
+    mapping(address => uint256) public addressToAmountFunded;
+    address[] public funders;
+
+    address public i_owner;
+    uint256 public constant MINIMUM_USD = 5 * 10 ** 18;
+    AggregatorV3Interface private s_priceFeed;
+
+    constructor(address priceFeed) {
+        i_owner = msg.sender;
+        s_priceFeed = AggregatorV3Interface(priceFeed);
+    }
+
+    function fund() public payable {
+        require(
+            msg.value.getConversionRate(s_priceFeed) >= MINIMUM_USD,
+            "You need to spend more ETH!"
+        );
+        // require(PriceConverter.getConversionRate(msg.value) >= MINIMUM_USD, "You need to spend more ETH!");
+        addressToAmountFunded[msg.sender] += msg.value;
+        funders.push(msg.sender);
+    }
+
+    function getVersion() public view returns (uint256) {
+        return s_priceFeed.version();
+    }
+
+    modifier onlyOwner() {
+        // require(msg.sender == owner);
+        if (msg.sender != i_owner) revert FundMe__NotOwner();
+        _;
+    }
+
+    function withdraw() public onlyOwner {
+        for (
+            uint256 funderIndex = 0;
+            funderIndex < funders.length;
+            funderIndex++
+        ) {
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+        funders = new address[](0);
+
+        (bool callSuccess, ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
+        require(callSuccess, "Call failed");
+    }
+
+    fallback() external payable {
+        fund();
+    }
+
+    receive() external payable {
+        fund();
+    }
+}
+```
+
+`PriceConverter.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+
+// Why is this a library and not abstract?
+// Why not an interface?
+library PriceConverter {
+    // We could make this public, but then we'd have to deploy it
+    function getPrice(
+        AggregatorV3Interface priceFeed
+    ) internal view returns (uint256) {
+        (, int256 answer, , , ) = priceFeed.latestRoundData();
+        // ETH/USD rate in 18 digit
+        return uint256(answer * 10000000000);
+    }
+
+    // 1000000000
+    function getConversionRate(
+        uint256 ethAmount,
+        AggregatorV3Interface priceFeed
+    ) internal view returns (uint256) {
+        uint256 ethPrice = getPrice(priceFeed);
+        uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1000000000000000000;
+        // the actual ETH/USD conversion rate, after adjusting the extra 0s.
+        return ethAmountInUsd;
+    }
+}
+```
+
+Take a moment and think if we missed updating anything in our project.
+
+You probably know the answer, right? We are missing to provide the priceFeed address in our deploy script and in our test. Let's hardcode it for now:
+
+`DeployFundMe.s.sol` should have this now:
+
+```solidity
+vm.startBroadcast();
+new FundMe(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+vm.stopBroadcast();
+```
+
+Now we could do the same thing for our tests, but it would then become tedious and not a great practice to keep updating things in both files, so let's modify our deploy script so that we can use it in our test file. Your `DeployFundMe.s.sol` should look like this:
+
+```solidity
+// SPDX-License_identifier: MIT
+
+pragma solidity 0.8.26;
+
+import {Script} from "forge-std/Script.sol";
+import {FundMe} from "../src/FundMe.sol";
+
+contract DeployFundMe is Script {
+    function run() external returns (FundMe) {
+        vm.startBroadcast();
+        FundMe fundMe = new FundMe(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+        vm.stopBroadcast();
+        return fundMe;
+    }
+}
+```
+
+Now for our tests, let's import the deployment script into the `FundMe.t.sol`:
+
+`import {DeployFundMe} from "../script/DeployFundMe.s.sol";`
+
+- Create a new state variable `DeployFundMe deployFundMe;`;
+- Update the `setUp` function:
+
+```solidity
+contract FundMeTest is Test {
+    FundMe fundMe;
+    DeployFundMe deployFundMe;
+
+    function setUp() external {
+        deployFundMe = new DeployFundMe();
+        fundMe = deployFundMe.run();
+    }
+
+    function testMinimumDollarIsFive() public view {
+        assertEq(fundMe.MINIMUM_USD(), 5e18);
+    }
+```
+
+Let's call a `forge test --fork-url $SEPOLIA_RPC_URL` to make sure everything compiles.
+
+Looks like the `testOwnerIsMsgSender` fails again. Take a moment and think about why.
+
+This surely must have to do with the fact that the deployer is coming now from our deploy script and not natively from within our setUp function.
+
+**Note**: `vm.startBroadcast` is special, it uses the address that calls the test contract or the address / private key provided as the sender.
+
+To account for the way `vm.startBroadcast` works, perform the following modification in `FundMe.t.sol`:
+
+```solidity
+function testOwnerIsMsgSender() public {
+    assertEq(fundMe.i_owner(), msg.sender);
+}
+```
+
+Run `forge test --fork-url $SEPOLIA_RPC_URL` again. Everything should work now.
 
 ## ❓ Questions and 💪 Exercises
 
