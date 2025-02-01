@@ -107,23 +107,39 @@ If you are working with Anvil you can skip the rpc url:
 
 This will prompt us for our private key. I'll take the first of the ones given by Anvil, paste it (nothing actually shows but you click enter) and you get the following back:
 
-```
-Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-Deployed to: 0x5FbDB2315678afecb367f032d93F642f64180aa3
-Transaction hash: 0xe933149cbe9c0958a21367bbf2f30a26dcdb497bcb22da9642c2059a71907cf8
-```
+`Warning: Dry run enabled, not broadcasting transaction`
+
+Plus a bunch of information about the transaction, including the bytecode and the ABI. But remember the warning:
+
+`Warning: To broadcast this transaction, add --broadcast to the previous command`
 
 ## What is dry-run?
 
-When you run the above command you get:
-
-`Warning: Dry run enabled, not broadcasting transaction`
+When you ran the above command you got `Warning: Dry run enabled, not broadcasting transaction` and you didn't get a contract address, that's because the deployment was simulated.
 
 A dry-run is a simulation mode to allow you to preview the outcome of the deployment. This is good for several reasons:
 
 Safety: It ensures that you can verify the deployment parameters, like gas estimates, constructor arguments, and deployment costs.
 Testing: Verify that your deployment setup works correctly without spending gas on a live network.
 Configuration Validation: Helps catch misconfigurations before real deployment.
+
+## Actually deploying your contract
+
+To deploy your contract add `--broadcast` as advised:
+
+`forge create SimpleStorage --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast`
+
+> **The above is anvil's first test private key, it's a dummy private key**
+
+And you get:
+
+``` 
+Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Deployed to: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+Transaction hash: 0xe933149cbe9c0958a21367bbf2f30a26dcdb497bcb22da9642c2059a71907cf8
+```
+
+Just as a curiosity if you ran `cast block-number` when you started your project you got `0` if you run it now you get `1`.
 
 ## Deleting your history
 
