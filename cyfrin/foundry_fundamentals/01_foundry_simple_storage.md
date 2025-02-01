@@ -145,6 +145,57 @@ Just as a curiosity if you ran `cast block-number` when you started your project
 
 You can delete your bash history by typing `history -c`.
 
+## 💪 Extra exercises and information
+
+Run `cast code 0x5FbDB2315678afecb367f032d93F642f64180aa3 --rpc-url http://127.0.0.1:8545`
+
+Let's now interact with this contract:
+
+1. Store a value in SimpleStorage:
+
+`cast send 0x5FbDB2315678afecb367f032d93F642f64180aa3 "store(uint256)" 42 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`
+
+Notice that sometimes I add `--rpc-url http://127.0.0.1:8545 ` and sometimes I omit it, both should yield the same result.
+
+Now retrieve the stored value:
+
+`cast call <CONTRACT_ADDRESS> "retrieve() (uint256)" --rpc-url http://127.0.0.1:8545` or:
+
+`cast call 0x5FbDB2315678afecb367f032d93F642f64180aa3 "retrieve() (uint256)"`
+
+Notice we didn't need the private key for that last one, you can tell why, right?
+
+### More `anvil` stuff
+
+If you shut down your anvil and then try this `anvil --block-time 5` you'll notice it now mines a new block every 5 seconds.
+
+Send a transaction, notice it will take 5 seconds to be confirmed:
+
+`cast send 0x5FbDB2315678afecb367f032d93F642f64180aa3 "store(uint256)" 50 --rpc-url http://127.0.0.1:8545 --private-key <PRIVATE_KEY>`  
+
+### ADVANCED: Forking Mainnet and Testing Real Data
+
+Run Anvil in fork mode:
+
+`anvil --fork-url https://mainnet.infura.io/v3/<YOUR_INFURA_API_KEY>`
+
+Impersonate Vitalik's account:
+
+`cast rpc anvil_impersonateAccount 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 --rpc-url http://127.0.0.1:8545`
+
+Send ETH from the impersonated account:
+
+`cast send 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --value 1ether --from 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 --unlocked --rpc-url http://127.0.0.1:8545`
+
+Verify your new balance:
+
+`cast balance <YOUR_WALLET> --rpc-url http://127.0.0.1:8545`
+
+Stop impersonating:
+
+`cast rpc anvil_stopImpersonatingAccount <WHALER_ADDRESS> --rpc-url http://127.0.0.1:8545`
+
+
 ## Deploy using a script
 
 In Foundry we keep our scripts in the `script` folder.
