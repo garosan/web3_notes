@@ -26,6 +26,12 @@ forge init
 
 Delete the 3 `Counter` example files and copy the [fund me contract](https://github.com/Cyfrin/remix-fund-me-cu/blob/main/FundMe.sol), and the [PriceConverter.sol](https://github.com/Cyfrin/remix-fund-me-cu/blob/main/PriceConverter.sol)
 
+Remember that as of Feb 1st, 2025, the contracts now live in:
+
+`import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";`
+
+Update the path accordingly.
+
 After this if we try `forge compile` we will get an error. We need to install the chainlink dependencies with `forge install`:
 
 `forge install smartcontractkit/chainlink-brownie-contracts@0.6.1 --no-commit`
@@ -37,10 +43,6 @@ Go to the `lib` folder and you will see the newly installed `chainlink-brownie-c
 But now we need to indicate the correct path to our imports of where to look for these files, so in `foundry.toml` we need to add this:
 
 `remappings = ['@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/']`.
-
-Also, make sure that you're importing the correct path inside your contracts:
-
-`import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";`
 
 If you now try `forge compile` everything works correctly.
 
@@ -106,7 +108,7 @@ As you can see this is the order of operations:
 
 1. We declare some state variables.
 2. Next up `setUp()` is called.
-3. After that forge runs all the test functions.
+3. After that, forge runs all the test functions.
 
 The `forge-std/Test.sol` offers us a `console.log` capability, let's import it:
 
@@ -188,7 +190,7 @@ contract FundMeTest is Test {
 Let's test that the owner is recorded properly, add this:
 
 ```solidity
-function testOwnerIsMsgSender() public {
+function testOwnerIsMsgSender() public view {
     assertEq(fundMe.i_owner(), msg.sender);
 }
 ```
@@ -316,8 +318,9 @@ https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/refactoring-testing
 
 ## ❓ Questions and 💪 Exercises
 
-Question ❓: What is this AggregatorV3Interface.sol file? What exactly does it do?
-Question ❓: You added some console.logs to your tests, you run `forge test` and you don't see them. What is missing?
+- Question ❓: What is this AggregatorV3Interface.sol file? What exactly does it do?
+- Question ❓: What are the differences between using a `require` and a `revert` in our `onlyOwner()` modifier?
+- Question ❓: You added some console.logs to your tests, you run `forge test` and you don't see them. What is missing?
 
 ## 🛠️ Links and Resources
 
