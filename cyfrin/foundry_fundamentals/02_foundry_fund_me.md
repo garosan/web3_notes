@@ -279,11 +279,13 @@ But back to our problem, how can we fix it?
 
 Forking is the solution we need. If we run the test on an anvil instance that copies the current Sepolia state, where AggregatorV3 exists at that address, then our test function will not revert anymore. For that, we need a Sepolia RPC URL.
 
-So we would again create a `.env` file, add it to source with our env variable:
+So we would again create a `.env` file with our env variable:
 
 `SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOURAPIKEYWILLGOHERE`
 
-and then run `forge test --mt testPriceFeedVersionIsAccurate --fork-url $SEPOLIA_RPC_URL`
+Remember to add it to source with `source .env`.
+
+Then run `forge test --mt testPriceFeedVersionIsAccurate --fork-url $SEPOLIA_RPC_URL`
 
 You can run `forge coverage --fork-url $SEPOLIA_RPC_URL` to check your total code coverage.
 
@@ -301,7 +303,6 @@ Add this in the constructor:
 constructor(address priceFeed){
     i_owner = msg.sender;
     s_priceFeed = AggregatorV3Interface(priceFeed);
-
 }
 ```
 
@@ -311,7 +312,6 @@ Then this:
 function getVersion() public view returns (uint256){
     AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeed);
     return priceFeed.version();
-
 }
 ```
 
@@ -400,30 +400,26 @@ pragma solidity 0.8.26;
 
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
-// Why is this a library and not abstract?
-// Why not an interface?
 library PriceConverter {
-    // We could make this public, but then we'd have to deploy it
     function getPrice(
         AggregatorV3Interface priceFeed
     ) internal view returns (uint256) {
         (, int256 answer, , , ) = priceFeed.latestRoundData();
-        // ETH/USD rate in 18 digit
         return uint256(answer * 10000000000);
     }
 
-    // 1000000000
     function getConversionRate(
         uint256 ethAmount,
         AggregatorV3Interface priceFeed
     ) internal view returns (uint256) {
         uint256 ethPrice = getPrice(priceFeed);
         uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1000000000000000000;
-        // the actual ETH/USD conversion rate, after adjusting the extra 0s.
         return ethAmountInUsd;
     }
 }
 ```
+
+`//TODO. CLarify exactly why we made that change in PriceConverter.sol`
 
 Take a moment and think if we missed updating anything in our project.
 
