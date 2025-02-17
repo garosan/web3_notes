@@ -288,6 +288,74 @@ contract Raffle {
 }
 ```
 
+## Random Numbers - Block Timestamp
+
+First, let's change our functions that were `public` to `external` to make them more gas efficient.
+
+Now we want to define an interval for our lottery, we want to set a specific time that we want our lottery to last (like PancakeSwap's lottery that runs every 5 minutes).
+
+So let's create this immutable variable:
+
+`uint256 private immutable i_interval;`
+
+And also add it to the constructor. You know how to do this.
+
+Now we would use `block.timestamp` to revert the function `pickWinner()` if not enough time has passed. This is how our code should look like so far:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+/**
+ * @title A sample Raffle contract
+ * @author Garo Sanchez
+ * @notice This contract is for creating a sample raffle
+ * @dev Implements Chainlink VRFv2.5
+ */
+
+contract Raffle {
+    /* Errors */
+    error Raffle__NotEnoughEthToEnterRaffle();
+
+    uint256 private immutable i_entranceFee;
+    uint256 private immutable i_interval;
+    address payable[] private s_players;
+    uint256 private s_lastTimestamp;
+
+    /* Events */
+    event EnteredRaffle(address indexed player);
+
+    constructor(uint256 entranceFee, uint256 interval) {
+        i_entranceFee = entranceFee;
+        i_interval = interval;
+        s_lastTimestamp = block.timestamp;
+    }
+
+    function enterRaffle() external payable {
+        // Old way using a require statement:
+        // require(msg.value >= i_entranceFee, "Not enough ETH sent!");
+        // New way using custom errors:
+        if (msg.value < i_entranceFee) {
+            revert Raffle__NotEnoughEthToEnterRaffle();
+        }
+        s_players.push(payable(msg.sender));
+        emit EnteredRaffle(msg.sender);
+    }
+
+    function pickWinner() external {
+        // See if enough time has passed
+        if (block.timestamp - s_lastTimestamp < i_interval) {
+            revert();
+        }
+    }
+
+    /** Getter Functions */
+    function getEntranceFee() external view returns (uint256) {
+        return i_entranceFee;
+    }
+}
+```
+
 ## Random Numbers - VRF
 
 https://updraft.cyfrin.io/courses/foundry/smart-contract-lottery/solidity-random-number-chainlink-vrf?lesson_format=transcript
