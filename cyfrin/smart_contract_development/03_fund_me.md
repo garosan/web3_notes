@@ -103,20 +103,25 @@ Functions allow **API calls** to be made within a decentralized environment. Thi
 For now, here's an example of how you could use Chainlink to retrieve on-chain the latest price of gold:
 
 ```solidity
-import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
-contract GoldPriceContract {
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+contract OracleTest {
     AggregatorV3Interface internal priceFeed;
     // The Chainlink price feed contract address
-    constructor() public {
-        priceFeed = AggregatorV3Interface(0x8468b2bDCE073A157E560AA4D9CcF6dB1DB98507);
+    constructor() {
+        priceFeed = AggregatorV3Interface(0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43);
     }
-    // Get the latest gold price
-    function getLatestGoldPrice() public view returns (int) {
+    // Get the BTC/USD price in Sepolia
+    function getLatestBTCPrice() public view returns (int) {
         (,int price,,,) = priceFeed.latestRoundData();
         return price;
     }
 }
 ```
+
+This returns 9626011591048 for me on 17-FEB-2025. We know Chainlink pricefeeds have 8 decimals so this would equal $96,260.1159, nice.
 
 ## Solidity interfaces
 
