@@ -67,7 +67,8 @@ contract Raffle{
 }
 ```
 
-Let's make our fee immutable and add a getter function to get the fee to enter:
+Let's make our fee immutable and add a getter function to get the fee to enter.
+Our contract should look like this:
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -140,9 +141,152 @@ function enterRaffle() external payable {
 }
 ```
 
-First, we changed the visibility from `public` to `external`. `external` is more gas efficient, and we won't call the `enterRaffle` function internally.
+Custom errors were introduced in Solidity v0.8.4 to provide a more gas-efficient way to explain to users why an operation failed.
 
-We used a `require` statement to ensure that the `msg.value` is higher than `i_entranceFee`. If that is false, we will yield an error message `"Not enough ETH sent"`.
+- [More information on Custom Errors](https://soliditylang.org/blog/2021/04/21/custom-errors/)
+
+Our custom error would look like this:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+/**
+ * @title A sample Raffle contract
+ * @author Garo Sanchez
+ * @notice This contract is for creating a sample raffle
+ * @dev Implements Chainlink VRFv2.5
+ */
+
+contract Raffle {
+    /*Errors */
+    error Raffle__NotEnoughEthToEnterRaffle();
+    uint256 private immutable i_entranceFee;
+
+    constructor(uint256 entranceFee) {
+        i_entranceFee = entranceFee;
+    }
+
+    function enterRaffle() public payable {
+        // Old way using a require statement:
+        // require(msg.value >= i_entranceFee, "Not enough ETH sent!");
+        // New way using custom errors:
+        if (msg.value < i_entranceFee) {
+            revert Raffle__NotEnoughEthToEnterRaffle();
+        }
+    }
+
+    function pickWinner() public {}
+
+    /** Getter Functions */
+    function getEntranceFee() external view returns (uint256) {
+        return i_entranceFee;
+    }
+}
+```
+
+2 things:
+
+1. Using an if statement combined with a custom error is the most efficient way to do this. We could use a custom error inside a require statement (supported as of 0.8.26) but it is not as gas efficient and has several caveats.
+2. In the docs, the custom error is outside the contract. Patricks says we will put the custom error definition inside the contract to avoid testing headaches, why?
+
+Notice it is a best practice to prefix your custom error with the name of the contract: `Raffle__NotEnoughEthToEnterRaffle()`
+
+## Smart Contract Events
+
+Now we need a storage structure to keep track of all registered users in the lottery.
+
+We will use a dynamic array that is payable:
+
+`address payable[] private s_players;`
+
+We've made it `address payable` because one of the participants registered in this array will be paid the ETH prize, hence the need for the `payable` attribute.
+
+Now in the `enterRaffle()` function, we need to push the address of the entered user into the array:
+
+```solidity
+function enterRaffle() public payable {
+    // Old way using a require statement:
+    // require(msg.value >= i_entranceFee, "Not enough ETH sent!");
+    // New way using custom errors:
+    if (msg.value < i_entranceFee) {
+        revert Raffle__NotEnoughEthToEnterRaffle();
+    }
+    s_players.push(payable(msg.sender));
+}
+```
+
+It would be good to create a little notification that a user has entered the raffle. Enter events.
+
+### Events
+
+Events are a way for smart contracts to communicate with the outside world, primarily with the front-end applications that interact with these contracts. Events are logs that the Ethereum Virtual Machine (EVM) stores in a special data structure known as the blockchain log, and are basically a very efficient way to track and retrieve information quickly.
+
+- [Solidity Docs- Events](https://docs.soliditylang.org/en/v0.8.25/contracts.html#events)
+
+An event has parameters and sometimes they have the keyword `indexed`. Indexed parameters, also called `topics`, are much more easy to search than non-indexed ones.
+
+Finally, for an event to be logged we need to emit it.
+
+This is the code to define an event: `event EnteredRaffle(address indexed player);`
+
+And the code to emit it:
+
+```solidity
+function enterRaffle() external payable {
+    if(msg.value < i_entranceFee) revert Raffle__NotEnoughEthSent();
+    s_players.push(payable(msg.sender));
+    emit EnteredRaffle(msg.sender);
+
+}
+```
+
+This is how our code should be looking so far:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+/**
+ * @title A sample Raffle contract
+ * @author Garo Sanchez
+ * @notice This contract is for creating a sample raffle
+ * @dev Implements Chainlink VRFv2.5
+ */
+
+contract Raffle {
+    /* Errors */
+    error Raffle__NotEnoughEthToEnterRaffle();
+
+    uint256 private immutable i_entranceFee;
+    address payable[] private s_players;
+
+    /* Events */
+    event EnteredRaffle(address indexed player);
+
+    constructor(uint256 entranceFee) {
+        i_entranceFee = entranceFee;
+    }
+
+    function enterRaffle() public payable {
+        // Old way using a require statement:
+        // require(msg.value >= i_entranceFee, "Not enough ETH sent!");
+        // New way using custom errors:
+        if (msg.value < i_entranceFee) {
+            revert Raffle__NotEnoughEthToEnterRaffle();
+        }
+        s_players.push(payable(msg.sender));
+        emit EnteredRaffle(msg.sender);
+    }
+
+    function pickWinner() public {}
+
+    /** Getter Functions */
+    function getEntranceFee() external view returns (uint256) {
+        return i_entranceFee;
+    }
+}
+```
 
 ## Random Numbers - VRF
 
