@@ -358,4 +358,189 @@ contract Raffle {
 
 ## Random Numbers - VRF
 
+To start reading about VRF, check the official [Chainlink docs](https://docs.chain.link/vrf) about VRF.
+
+So, how does Chainlink VRF work?
+
+Chainlink VRF provides randomness in 3 steps:
+
+1. Requesting Randomness: A smart contract makes a request for randomness by calling the `requestRandomness` function provided by the Chainlink VRF. This involves sending a request to the Chainlink oracle along with the necessary fees.
+
+2. Generating Randomness: The Chainlink oracle node generates a random number off-chain using a secure cryptographic method. The oracle also generates a proof that this number was generated in a verifiable manner.
+
+3. Returning the Result: The oracle returns the random number along with the cryptographic proof to the smart contract. The smart contract can then use the random number, and any external observer can verify the proof to confirm the authenticity and integrity of the randomness.
+
+Let's implement VRF following these steps:
+
+1. Go to the Chainlink Faucet and get some test LINK.
+
+2. Go to the [subscription manager](https://vrf.chain.link/) and click 'Create Subscription'.
+
+3. In the list of your subscriptions, click on the subscription > 'Fund subscription'.
+
+4. Next click on 'Add Consumer'. Our smart contract and Chainlink VRF need to be aware of each other. So this page will give you a 'Subscription ID' that your contract will consume, and requests you the address of the contract that will use it.
+
+5. Go to [this page](https://docs.chain.link/vrf/v2/subscription/examples/get-a-random-number#create-and-deploy-a-vrf-v2-compatible-contract) and check what it says.
+
+First, the example code imports 3 dependencies:
+
+- `VRFConsumerBaseV2.sol`
+- `VRFCoordinatorV2Interface.sol`
+- `ConfirmedOwner.sol`
+
+This contract also includes hard-coded request parameters such as `vrfCoordinator` address, gas lane `keyHash`, `callbackGasLimit`, `requestConfirmations` and number of random words `numWords`.
+
+- In [this page](https://docs.chain.link/vrf/v2-5/supported-networks) you will find all the configuration parameters that you may need for your app.
+
+The rest of the video is a detailed walkthrough of the code in the example contract, we will skip that for now.
+
+// TODO: Come back and take a look at the detailed walkthrough and add notes.
+
+## Implementing VRF in our code
+
+Getting a random number is a 2 step process:
+
+1. Request the random number generator (RNG)
+2. Get the actual random number
+
+It's important to note that [this](<(https://remix.ethereum.org/#url=https://docs.chain.link/samples/VRF/v2-5/VRFD20.sol&autoCompile=true)>) is the most up to date implementation of the example code, so let's open that in Remix and bring in this piece of code:
+
+```solidity
+requestId = s_vrfCoordinator.requestRandomWords(
+    VRFV2PlusClient.RandomWordsRequest({
+        keyHash: s_keyHash,
+        subId: s_subscriptionId,
+        requestConfirmations: requestConfirmations,
+        callbackGasLimit: callbackGasLimit,
+        numWords: numWords,
+        extraArgs: VRFV2PlusClient._argsToBytes(
+            // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
+            VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
+        )
+    })
+);
+```
+
+We will go step by step to make this code work in our contract.
+
+## Implementing VRF in our code
+
+Let's first install Chainlink:
+
+`forge install smartcontractkit/chainlink-brownie-contracts --no-commit`
+
+Then update the `foundry.toml` file to include remappings:
+
+```toml
+remappings = [
+  '@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/',
+]
+```
+
+And now we can do our imports like this:
+
+```solidity
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+```
+
+Now let's inherit `VRFConsumerBaseV2Plus`.
+
+Ok so basically we created all the immutable and constant variables needed, passed them in the constructor and plugged them in our function. Oh we also had to import the randomWords function at the end so we could complete the compilation.
+
+Our code should look like this now:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+
+/**
+ * @title A sample Raffle contract
+ * @author Garo Sanchez
+ * @notice This contract is for creating a sample raffle
+ * @dev Implements Chainlink VRFv2.5
+ */
+
+contract Raffle is VRFConsumerBaseV2Plus {
+    /* Errors */
+    error Raffle__NotEnoughEthToEnterRaffle();
+
+    uint16 private constant REQUEST_CONFIRMATIONS = 3;
+    uint32 private constant NUM_WORDS = 1;
+
+    uint256 private immutable i_entranceFee;
+    uint256 private immutable i_interval;
+    bytes32 private immutable i_keyHash;
+    uint32 private immutable i_callbackGasLimit;
+    uint256 private immutable i_subscriptionId;
+    address payable[] private s_players;
+    uint256 private s_lastTimestamp;
+
+    /* Events */
+    event EnteredRaffle(address indexed player);
+
+    constructor(
+        uint256 entranceFee,
+        uint256 interval,
+        address vrfCoordinator,
+        bytes32 gasLane,
+        uint256 subscriptionId,
+        uint32 callbackGasLimit
+    ) VRFConsumerBaseV2Plus(vrfCoordinator) {
+        i_entranceFee = entranceFee;
+        i_interval = interval;
+        i_keyHash = gasLane;
+        i_subscriptionId = subscriptionId;
+        s_lastTimestamp = block.timestamp;
+        i_callbackGasLimit = callbackGasLimit;
+    }
+
+    function enterRaffle() external payable {
+        // Old way using a require statement:
+        // require(msg.value >= i_entranceFee, "Not enough ETH sent!");
+        // New way using custom errors:
+        if (msg.value < i_entranceFee) {
+            revert Raffle__NotEnoughEthToEnterRaffle();
+        }
+        s_players.push(payable(msg.sender));
+        emit EnteredRaffle(msg.sender);
+    }
+
+    function pickWinner() external {
+        // See if enough time has passed
+        if (block.timestamp - s_lastTimestamp < i_interval) {
+            revert();
+        }
+
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
+                keyHash: i_keyHash,
+                subId: i_subscriptionId,
+                requestConfirmations: REQUEST_CONFIRMATIONS,
+                callbackGasLimit: i_callbackGasLimit,
+                numWords: NUM_WORDS,
+                extraArgs: VRFV2PlusClient._argsToBytes(
+                    // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
+                )
+            })
+        );
+    }
+
+    function fulfillRandomWords(
+        uint256 requestId,
+        uint256[] calldata randomWords
+    ) internal override {}
+
+    /** Getter Functions */
+    function getEntranceFee() external view returns (uint256) {
+        return i_entranceFee;
+    }
+}
+```
+
 https://updraft.cyfrin.io/courses/foundry/smart-contract-lottery/solidity-random-number-chainlink-vrf?lesson_format=transcript
