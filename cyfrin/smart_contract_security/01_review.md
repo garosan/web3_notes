@@ -91,6 +91,37 @@ For variables that are declared inside a function, their existence is ephemeral 
 
 Finally, the `memory` keyword. Primarily used with strings, `memory` is needed because strings are dynamically sized arrays. By using this keyword, we tell Solidity that string operations are to be performed not in `Storage`, but in a separate memory location.
 
+## Fallback and Receive
+
+These two specific functions - `fallback` and `receive` - enable a contract to accept and react to native ETH sent to it. Both these functions can be made "**external payable**", indicating that they can receive and handle ETH.
+
+To put it simply, consider the case of sending ETH to a smart contract without any data. In such an instance, the `receive` function would be called, resorting to `fallback` if the `receive` function does not exist.
+
+On the other hand, if there _is_ data, Solidity will skip straight to the `fallback` function, bypassing the `receive` function entirely.
+
+It is worthwhile to note that the `fallback` function may or may not be payable. If the contract lacks a `receive` function and the `fallback` function isn't payable, then the `fallback` function won't be called when you send ETH to the contract.
+
+A contract that does not contain any of these functions will reject any ETH sent to it. In fact, Solidity will automatically compile this contract to reject ETH - with at least one notable exception we'll go over later.
+
+## Encoding
+
+Understand ABI.encode & ABI.encodePacked, abi.decode(), in Solidity
+
+// TODO: Understand this section better.
+// TODO: Also understand the difference between call(), staticcall() and delegatecall().
+
+## Upgradeable contracts
+
+Upgrades, proxies, delegatecalls...
+
+// TODO: Understand this section better.
+
+## Self Destruct
+
+## Fork tests
+
+`forge test --fork-url $MAINNET_ALCHEMY_URL`
+
 ## 🛠️ Links and Resources
 
 - [Peera](https://app.peera.ai/)

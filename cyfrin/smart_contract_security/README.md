@@ -9,6 +9,7 @@
 - [ERC-721](#)
 - [ERC-777](#)
 - [ERC-1155](#)
+- [ERC-1967: Standard Proxy Storage Slots](#)
 
 ## Links
 
