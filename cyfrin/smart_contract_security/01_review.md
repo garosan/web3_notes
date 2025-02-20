@@ -25,15 +25,32 @@ Each system, from a function to an entire program, has an integral property, oft
 
 ### Introducing Fuzz Tests and Invariant Tests
 
-There are two popular methodologies when dealing with edge cases: using _fuzz tests/invariant tests_, or _symbolic execution_ (which we'll save for another day).
+There are two popular methodologies when dealing with edge cases: using _fuzz tests/invariant tests_, or _symbolic execution_/_formal verification_ (which we'll save for another day).
 
 Foundry will automatically randomize data and use numerous examples to run through the test script. This test will be supplied random data from 0 to uint256.max(), as many times as you've conifigured runs.
 
 > Reminder: You can configure the number of runs in your foundry.toml under the \[fuzz] variable
 
+The process should be:
+
+1. Understand which are the invariants of the system
+2. Write a fuzz test for those invariants
+
 Stateless Fuzzing versus Stateful Fuzzing
 
-`Stateful fuzzing`, instead of resetting the contract state for each new run, will use the ending state of your previous run as the starting state of your next.
+_Stateful fuzzing_, instead of resetting the contract state for each new run, will use the ending state of your previous run as the starting state of your next.
+
+- **Stateful fuzzing**: Fuzzing where the final state of your previous run is the starting state of your next run.
+
+Try to understand how to set an invariant test in Foundry.
+
+### Definitions
+
+Again, in the context of Foundry:
+
+- Fuzzing or Fuzz testing = Giving random data to one function
+- Invariant testing = Giving random data & random function calls to many functions (also called stateful fuzzing)
+- Symbolic execution and formal verification are the same.
 
 ## Installing Libraries
 
@@ -54,6 +71,25 @@ When you create a state variable within your contract, an individual storage slo
 Constants or immutable variables do not occupy space in storage. This unique trait is due to their nature of being stored directly within the contract's bytecode.
 
 `forge inspect Counter storage`
+
+## Storage
+
+- Each slot is 32 bytes long and is shown in its hex representation
+- Constants or immutable variables don't occupy space in `Storage`, they're stored directly in the contract's bytecode.
+
+Think of `Storage` as a huge array or list that contains all the variables we create in Solidity.
+
+### Dynamic variables
+
+Variables in the form of dynamic arrays or mapping are stored using some type of hashing function. The object itself does take up a storage slot, but it doesn't contain the whole array. Instead, the storage slot contains the length of the array.
+
+### Temporary variables in function scope
+
+For variables that are declared inside a function, their existence is ephemeral and scoped merely to the span of that function. These variables do not persist inside the contract and are not stored in `Storage`. Instead, they're stashed in a different memory data structure, which deletes them as soon as the function has finished execution.
+
+### Memory Keyword
+
+Finally, the `memory` keyword. Primarily used with strings, `memory` is needed because strings are dynamically sized arrays. By using this keyword, we tell Solidity that string operations are to be performed not in `Storage`, but in a separate memory location.
 
 ## 🛠️ Links and Resources
 

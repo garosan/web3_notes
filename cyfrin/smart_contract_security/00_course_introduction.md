@@ -14,7 +14,7 @@ Taught by:
 - Andy Li
   - [Youtube](https://www.youtube.com/@andyli)
 - [Josselin Feist](https://x.com/Montyly) from Trail of Bits
-- Alex Roan
+- [Alex Roan](https://x.com/alexroan) CTO Cyfrin
 - Owen from Guardian Audits
   - [X](https://x.com/0xOwenThurm)
   - [Youtube](https://www.youtube.com/@0xOwenThurm)
@@ -45,6 +45,8 @@ Topics covered:
 - [Blockchain Threat Intelligence by Peter Kacherginsky](https://x.com/blockthreat)
 
 ## Exercises
+
+Watch these:
 
 - [DeFi Security Summit](https://defisecuritysummit.org/)
 - [DeFi Security Summit Channel](https://www.youtube.com/@defisecuritysummit2088)
