@@ -122,5 +122,3 @@ Let's consider the weakest parts of Web3 and remind everyone with the **“Top A
 ## Exercise
 
 Sign up for one security/web3 newsletter:
-
--
