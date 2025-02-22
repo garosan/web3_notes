@@ -36,5 +36,93 @@ Once installed, you can do cloc ./src/
 - Tincho wrote fuzz tests
 - Timebox yourself
 
-https://youtu.be/pUWmJ86X_do?t=10865
-https://youtu.be/pUWmJ86X_do?t=11118
+## Getting Context - Solidity Metrics
+
+Use the tool: Solidity Metrics by tintinweb
+
+Right-click on a folder > 'Solidity Metrics'
+
+Then command palette > Export Metrics Report in html
+
+Sometimes the recon phase mixes with the vulnerability identification phase
+
+## Explot: Access Control
+
+Takes notes the way that works best for you, but always take notes:
+
+What we've found is a fairly common vulnerability that protocols overlook. `Access Control` effectively describes a situation where inadequate or inappropriate limitations have been places on a user's ability to perform certain actions.
+
+In our simple example - only the owner of the protocol should be able to call `setPassword()`, but in its current implementation, this function can be called by anyone.
+
+## Protocol Tests
+
+Check test coverage with `forge coverage`
+
+## Phase 4: Reporting
+
+You can copy the minimalistic file finding_layout.md:
+
+```markdown
+### [S-#] TITLE (Root Cause + Impact)
+
+**Description:**
+
+**Impact:**
+
+**Proof of Concept:**
+
+**Recommended Mitigation:**
+```
+
+## Writing an amazing private report
+
+`fndings.md`
+
+### Storing the password on-chain makes it visible to anyone, and no longer private
+
+**Description:** All data stored on-chain is visible to anyone, and can be read directly from the blockchain. The `PasswordStore::s_password` variable is intended to be a private variable and only accessed through the `PasswordStore::getPassword` function, which is intended to be only called by the owner of the contract.
+
+We show one such method of reading any data off chain below.
+
+**Impact:** Anyone can read the private password, severely breaking the functionality of the protocol.
+
+**Proof of Concept:** The below test case shows how anyone can read the password directly from the blockchain.
+
+Explain step by step what we are going to do in the next section
+
+## Writing an amazing proof of code
+
+First lets run anvil.
+Then deploy the PasswordStore contract to the local anvil chain using make deploy
+
+Then cast storage contract_address <storage-slot-of-variable>
+
+`cast storage 0x5FbDB2315678afecb367f032d93F642f64180aa3 1 --rpc-url https://127.0.0.1:8545`
+
+We get back:
+
+0x6d7950617373776f726400000000000000000000000000000000000000000014
+
+Then, to cast we use:
+
+`cast parse-bytes32-string 0x6d7950617373776f726400000000000000000000000000000000000000000014`
+
+## Recommended Mitigation
+
+```markdown
+**Recommended Mitigation:** Due to this, the overall architecture of the contract should be rethought. One could encrypt the password off-chain, and then store the encrypted password on-chain. This would require the user to remember another password off-chain to decrypt the stored password. However, you're also likely want to remove the view function as you wouldn't want the user to accidentally send a transaction with this decryption key.
+```
+
+## CodeHawks Docs
+
+https://docs.codehawks.com/ read this, especifically this:
+
+https://docs.codehawks.com/hawks-auditors/how-to-evaluate-a-finding-severity
+
+## Final
+
+Timebox yourself.
+
+## Making a PDF of your report
+
+https://github.com/Cyfrin/audit-report-templating

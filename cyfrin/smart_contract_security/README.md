@@ -26,3 +26,9 @@ ERC20 has only functionality for moving and accounting for funds. There is no wa
 transfer() is suitable and safe for transferring to EOAs only. If you want to transfer tokens to a contract, you need to ensure that the receiver contract can handle incoming transfers. An accidental token transfer to a contract that is not ERC-20 compatible will result in loss of tokens.
 
 To send the funds to a smart contract, Alice needs to use the approve and transferFrom combination.
+
+a. First, the user needs to set allowance for the receiverContract with an amount: approve(receiverContract,100)
+
+b. Then, the user has to make a call from receiverContract to move user funds from the ERC20 token contract to the receiver contract using transferFrom(Alice,receiverContract,100)
+
+c. This pattern is also gas-inefficient, since it requires two separate transactions to move the funds from the user to the receiver contract.s
