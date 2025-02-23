@@ -77,3 +77,103 @@ slither .
 # To stop using slither and deactivate the venv
 deactivate
 ```
+
+## Tooling - Aderyn
+
+https://github.com/Cyfrin/aderyn
+
+Created by Alex Roan, Cyfrin's CTO.
+
+You need to install rust for this one.
+
+## Tooling - Solidity Visual Developer
+
+This extension helps you add highlight box to variables to see if they're memory, storage variables, etc. Completely optional and I won't install it.
+
+## Recon - Reading docs
+
+One good tip would be to create your `.notes.md` file (for any project) and add the 'About' section in your own words. For this project this is what we're given:
+
+### Puppy Raffle
+
+This project is to enter a raffle to win a cute dog NFT. The protocol should do the following:
+
+1. Call the `enterRaffle` function with the following parameters:
+   1. `address[] participants`: A list of addresses that enter. You can use this to enter yourself multiple times, or yourself and a group of your friends.
+2. Duplicate addresses are not allowed
+3. Users are allowed to get a refund of their ticket & `value` if they call the `refund` function
+4. Every X seconds, the raffle will be able to draw a winner and be minted a random puppy
+5. The owner of the protocol will set a feeAddress to take a cut of the `value`, and the rest of the funds will be sent to the winner of the puppy.
+
+## Recon: Reading the code
+
+We can do `forge inspect PuppyRaffle methods`
+
+For now we can see that immutable variables should be prefixed with `i_varName`.
+
+## Recon: Reading the code II
+
+We can start seeing more interesting things.
+
+In `msg.value == entranceFee * newPlayers.length` what is one of them is 0?
+
+There's a very important bug in here, can you spot it?
+
+```solidity
+for (uint256 i = 0; i < players.length - 1; i++) {
+    for (uint256 j = i + 1; j < players.length; j++) {
+        require(players[i] != players[j], "PuppyRaffle: Duplicate player");
+    }
+}
+```
+
+## sc-exploits-minimized
+
+Check out this Cyfrin [repo](https://github.com/Cyfrin/sc-exploits-minimized) which contains minimized examples of some of the bugs that we're going to see.
+
+## Explot: Denial of service
+
+https://www.damnvulnerabledefi.xyz/challenges/unstoppable/
+
+This is the Remix example:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+contract DoS {
+    address[] entrants;
+
+    function enter() public {
+        // Check for duplicate entrants
+        for (uint256 i; i < entrants.length; i++) {
+            if (entrants[i] == msg.sender) {
+                revert("You've already entered!");
+            }
+        }
+        entrants.push(msg.sender);
+    }
+}
+```
+
+Let's try to enter this with our 1st account:
+
+For participant 0, execution cost 44633
+participant 1, execution cost 30160 // Why you ask? The 1st one to use the contract has to pay more gas to 'initialize' the cct.
+participant 2, cost 32787
+participant 3, cost 35414
+
+It would be super cool if you could:
+
+1. Clone the repo and run the tests yourself to verify what was said
+2. Be able to create your own tests to test this kind of scenarios
+
+## Case Study: DoS
+
+Owen Thurm from Guardian Audits.
+
+unbounded for loops??
+
+### Another finding Global-1 | Should unwrap native token DoS
+
+// TODO: Come back to this part bcs I didnt understand sht.
