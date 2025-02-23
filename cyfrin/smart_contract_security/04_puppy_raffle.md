@@ -33,3 +33,47 @@ If you take a look at the **[repo](https://github.com/Cyfrin/4-puppy-raffle-audi
 2. Take some time to scope the codebase yourself before proceeding. Try to go through the process we just did with PasswordStore and challenge yourself to find what you can here.
 
 ## Phase 1: Scoping
+
+Take a look at the **[Puppy Raffle Repo](https://github.com/Cyfrin/4-puppy-raffle-audit)**'s README.
+
+What we're looking for:
+
+- About section to tell us what's the contract or set of contracts' purpose
+- Setup (If there's a makefile run `make` 1st unless otherwise instructed)
+- Scope
+- Compatibilities (This contract is solidity v 0.7.x, hmm strange)
+- Roles
+- Known issues
+
+> Take a brief look at your `Makefile`. It's worthwhile to appreciate what it's actually doing. Our `Makefile` cleans our repo, installs necessary packages (Foundry, OpenZeppelin and base64) and then runs `forge build` to compile everything.
+
+### Testing
+
+Once we've run our `make` command, we should check out the protocol tests. I like to start by running `forge coverage` to see what kind of baseline we're starting with.
+
+### Continuing...
+
+By using the command `git checkout <commitHash>` we can assure our local repo is the correct version to be auditing.
+
+### Roles
+
+- Owner - Deployer of the protocol, has the power to change the wallet address to which fees are sent through the changeFeeAddress function.
+- Player - Participant of the raffle, has the power to enter the raffle with the enterRaffle function and refund value through refund function.
+
+## Tooling - Slither
+
+https://github.com/crytic/slither
+
+So I had to install slither using a global python environment:
+
+```bash
+python3 -m venv ~/slither-venv
+source ~/slither-venv/bin/activate
+# Install Slither once inside this global venv
+pip install slither-analyzer
+# Now, in any Foundry project, just activate this global venv before running Slither:
+source ~/slither-venv/bin/activate
+slither .
+# To stop using slither and deactivate the venv
+deactivate
+```
