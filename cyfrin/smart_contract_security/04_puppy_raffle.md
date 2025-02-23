@@ -177,3 +177,37 @@ unbounded for loops??
 ### Another finding Global-1 | Should unwrap native token DoS
 
 // TODO: Come back to this part bcs I didnt understand sht.
+
+## DoS PoC
+
+Let's create a PoC to demonstrate this is actually an issue in our PuppyRaffle contract
+
+First lets run forge test to make sure the test suite works.
+
+// TODO: Come back and try to do this myself understanding each bit of the test code.
+
+## DoS: Reporting
+
+Here we're just creating the report. Circle back to this if you need inspiration on how to prepare and write your report.
+
+## DoS: Mitigation
+
+## Exploit: Business logic edge case
+
+A little bug that was found:
+
+```solidity
+/// @notice a way to get the index in the array
+/// @param player the address of a player in the raffle
+/// @return the index of the player in the array, if they are not active, it returns 0
+function getActivePlayerIndex(address player) external view returns (uint256) {
+    for (uint256 i = 0; i < players.length; i++) {
+        if (players[i] == player) {
+            return i;
+        }
+    }
+    return 0;
+}
+```
+
+Can you spot why this is a bug? Patrick says its severity is _informational_ idk about that.
