@@ -211,3 +211,41 @@ function getActivePlayerIndex(address player) external view returns (uint256) {
 ```
 
 Can you spot why this is a bug? Patrick says its severity is _informational_ idk about that.
+
+## Recon: Refund
+
+The next bug is in the `refund()` function, see if you can spot it:
+
+```solidity
+/// @param playerIndex the index of the player to refund. You can find it externally by calling `getActivePlayerIndex`
+/// @dev This function will allow there to be blank spots in the array
+function refund(uint256 playerIndex) public {
+    address playerAddress = players[playerIndex];
+    require(playerAddress == msg.sender, "PuppyRaffle: Only the player can refund");
+    require(playerAddress != address(0), "PuppyRaffle: Player already refunded, or is not active");
+
+    payable(msg.sender).sendValue(entranceFee);
+
+    players[playerIndex] = address(0);
+    emit RaffleRefunded(playerAddress);
+}
+```
+
+It seems to me from the hints that it has something to do with a reentrancy attack. Here CEI pattern could come in handy, maybe its something related to that we should first do `players[playerIndex] = address(0);` and then send the value, but we'll see.
+Basically here we're doing it the other way around, CHECKS-INTERACTIONS-EFFECTS...
+
+## Exploit: Reentrancy
+
+An explanation of how a reentrancy attack works.
+
+## Reentrancy: Remix example
+
+PoC of Reentrancy Attack
+
+## Reentrancy: Mitigation
+
+CEI is falling behind as a concept and now there is CEII, FRE-PI.
+
+## Menace to Society
+
+- [Github repo](https://github.com/pcaversaccio/reentrancy-attacks) by Pascal showing all reentrancy attacks up to this date.
