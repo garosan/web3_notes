@@ -10,7 +10,7 @@ From hacks to lost funds, the risks are real.
 
 Let's look at three different patterns or philosophies we can use:
 
-1. Not really upgrading
+1. Parameterizing (Not really upgrading, just adding a bunch of setter functions)
 2. Social migration
 3. Proxy (with subcategories like metamorphic contracts, transparent upgradable proxies, and universal upgradable proxies)
 
@@ -22,18 +22,24 @@ Another question that arises is—who gets access to these functions? If a singl
 
 ### Social Migration
 
-Another method is social migration. It involves deploying a new contract and socially agreeing to consider the new contract as the 'real' one. For this one, the contract will function the same way, whether invoked now or in 50,000 years. But one major disadvantage is that you'd now have a new contract address for an already existing token. This would require every exchange listing your token to update to this new contract address.
+Basically like being AAVE and saying 'hey everyone we just launched V2, go here to interact with V2!'. It's a social convention that everyone agrees to use the new contract.
+
+Drawbacks:
+
+- It has a new address so you have to tell everyone to use the new contract (including exchanges and other platforms that reference your contract)
+- You have to move all your state to the new contract (i.e. if you're a ERC-20, you need to move all the current balances to the new contract)
 
 Moving the state of the first contract to the second one is also a challenging task. You need to devise a migration method to transport the storage from one contract to the other. You can learn more about the social migration method from [this blog post](https://blog.trailofbits.com/2018/09/05/contract-upgrade-anti-patterns/) written by Trail of Bits.
 
 ### Proxies
 
-Proxies are the holy grail of smart contract upgrades. They allow for state continuity and logical updates while maintaining the same contract address. Users may interact with contracts through proxies without ever realizing anything changed behind the scenes.
+Proxies are the real way to make upgradeable contracts. The idea is that you deploy a proxy and an implementation contract. Users interact with the proxy which calls the implementation contract. If you the dev want, you can change the implementation without users
+ever realizing they're interacting with a new version of the contract.
 
-There are a ton of proxy methodologies, but three are worth discussing here:
+There are 3 main proxy methodologies:
 
 - Transparent Proxies
-- Universal Upgradable Proxies (UPS)
+- Universal Upgradable Proxies (UUPS)
 - The Diamond Pattern
 
 Each has its benefits and drawbacks, but the focus is on maintaining contract functionality and decentralization.
