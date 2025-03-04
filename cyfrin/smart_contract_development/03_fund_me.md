@@ -654,13 +654,122 @@ By implementing `receive` and `fallback` functions, contracts can handle direct 
 
 - Question ❓: What are interfaces in Solidity and why are they helpful?
 - Question ❓: What are libraries in Solidity?
-- Question ❓: What are the consequences if a library function is not marked as `internal`?
+- Question ❓: What are the consequences if a library function is not marked as `internal`? (Check [this](https://x.com/garosan1/status/1896967666453393642) thread)
 - Question ❓: What are the primary differences between _transfer_, _send_, and _call_ when transferring Ether?
 - Question ❓: Why is it necessary to convert an address to a `payable` type before sending Ether to it?
 - Question ❓: Why is it beneficial to use `modifiers` for access control?
 - Question ❓: What are the benefits of declaring custom errors instead of using the `require` keyword?
 - Question ❓: How does the `fallback` function differ from the `receive` function?
 - Question ❓: What does it happen when Ether is sent with _data_ but in the contract only a `receive` function exist?
+- Question ❓: In the process of verifying a contract in Etherscan, you sometimes need to flatten the contract, what does flattening a contract means?
+
+## Final Code (For Sepolia)
+
+`FundMe.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {PriceConverter} from "./PriceConverter.sol";
+
+error NotOwner();
+
+contract FundMe {
+    using PriceConverter for uint256;
+
+    mapping(address => uint256) public addressToAmountFunded;
+    address[] public funders;
+
+    // Could we make this constant?  /* hint: no! We should make it immutable! */
+    address public i_owner;
+    uint256 public constant MINIMUM_USD = 5 * 10 ** 18;
+
+    constructor() {
+        i_owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        if (msg.sender != i_owner) revert NotOwner();
+        _;
+    }
+
+    function fund() public payable {
+        require(msg.value.getConversionRate() >= MINIMUM_USD, "You need to spend more ETH!");
+        // require(PriceConverter.getConversionRate(msg.value) >= MINIMUM_USD, "You need to spend more ETH!");
+        addressToAmountFunded[msg.sender] += msg.value;
+        funders.push(msg.sender);
+    }
+
+    function getVersion() public view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+        return priceFeed.version();
+    }
+
+    function withdraw() public onlyOwner {
+        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+        funders = new address[](0);
+        // // transfer
+        // payable(msg.sender).transfer(address(this).balance);
+
+        // // send
+        // bool sendSuccess = payable(msg.sender).send(address(this).balance);
+        // require(sendSuccess, "Send failed");
+
+        // call
+        (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Call failed");
+    }
+
+    fallback() external payable {
+        fund();
+    }
+
+    receive() external payable {
+        fund();
+    }
+}
+```
+
+`PriceConverter.sol`:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+
+library PriceConverter {
+    // We could make this public, but then we'd have to deploy it
+    function getPrice() internal view returns (uint256) {
+        // Sepolia ETH / USD Address
+        // https://docs.chain.link/data-feeds/price-feeds/addresses
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
+        );
+        (, int256 answer, , , ) = priceFeed.latestRoundData();
+        // ETH/USD rate in 18 digit
+        return uint256(answer * 10000000000);
+    }
+
+    // 1000000000
+    function getConversionRate(
+        uint256 ethAmount
+    ) internal view returns (uint256) {
+        uint256 ethPrice = getPrice();
+        uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1000000000000000000;
+        // the actual ETH/USD conversion rate, after adjusting the extra 0s.
+        return ethAmountInUsd;
+    }
+}
+```
+
+- [PriceConverter.sol on Etherscan](https://sepolia.etherscan.io/address/0x6f70f2752fbfde63ff4aed77b99976abda0c4025)
+- [FundMe.sol on Etherscan](https://sepolia.etherscan.io/address/0x18cafd8b130a5dd02ce8b873ae9d590c4a1312a7)
 
 ## 🛠️ Links and Resources
 
