@@ -47,7 +47,7 @@ We can use the`require` keyword as a checker, to enforce our function to receive
 
 The require statement in Solidity can include a custom error message, which is displayed if the condition isn't met, clearly explaining the cause of the transaction failure:
 
-`require(msg.value > 1 ether, "Didn't send enough ETH"); //if the condition is false, revert with the error message`
+`require(msg.value > 1 ether, "Didn't send enough ETH"); // if the condition is false, revert with the error message`
 
 Notice how we can replace `1 * 10 ** 18` with `1 ether`. You can check all the ether units available in the links.
 
@@ -141,10 +141,15 @@ contract OracleTest {
         (,int price,,,) = priceFeed.latestRoundData();
         return price;
     }
+
+    // You can double check the amount of decimals
+    function getDecimals() public view returns (uint8) {
+        return priceFeed.decimals();
+    }
 }
 ```
 
-This gives me back 659878 on 17-FEB-2025. If we add 8 decimals we get 0.66 JPY per 1 USD. Pretty much the same that google give us. Sweet.
+This gives me back 659878 on 17-FEB-2025. If we add 8 decimals we get 0.0066 JPY per 1 USD. Pretty much the same that google give us. Sweet.
 
 ## Solidity interfaces
 

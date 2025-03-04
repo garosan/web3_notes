@@ -1,6 +1,6 @@
 # Section 02. Storage Factory
 
-3 contracts:
+We will work with 3 contracts:
 
 - `SimpleStorage.sol`: The contract from the previous lesson with slight modifications
 - `AddFiveStorage.sol`: A child contract of `SimpleStorage`
@@ -11,9 +11,6 @@ We begin with this version of `SimpleStorage.sol`:
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
-
-// pragma solidity ^0.8.0;
-// pragma solidity >=0.8.0 <0.9.0;
 
 contract SimpleStorage {
     uint256 myFavoriteNumber;
@@ -79,7 +76,11 @@ contract StorageFactory {
 }
 ```
 
-- Remember that you should always try to use **named imports**.
+- Remember that you should always try to use **named imports**, i.e. do this:
+
+`import {ERC20} from "@openzeppelin/contracts@4.9.3/token/ERC20/ERC20.sol";` instead of:
+
+`import "@openzeppelin/contracts@4.9.3/token/ERC20/ERC20.sol";` this.
 
 ### Interacting with a contract's ABI
 
