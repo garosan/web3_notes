@@ -119,9 +119,9 @@ When you ran the above command you got `Warning: Dry run enabled, not broadcasti
 
 A dry-run is a simulation mode to allow you to preview the outcome of the deployment. This is good for several reasons:
 
-Safety: It ensures that you can verify the deployment parameters, like gas estimates, constructor arguments, and deployment costs.
-Testing: Verify that your deployment setup works correctly without spending gas on a live network.
-Configuration Validation: Helps catch misconfigurations before real deployment.
+- Safety: It ensures that you can verify the deployment parameters, like gas estimates, constructor arguments, and deployment costs.
+- Testing: Verify that your deployment setup works correctly without spending gas on a live network.
+- Configuration Validation: Helps catch misconfigurations before real deployment.
 
 ## Actually deploying your contract
 
@@ -133,7 +133,7 @@ To deploy your contract add `--broadcast` as advised:
 
 And you get:
 
-``` 
+```
 Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 Deployed to: 0x5FbDB2315678afecb367f032d93F642f64180aa3
 Transaction hash: 0xe933149cbe9c0958a21367bbf2f30a26dcdb497bcb22da9642c2059a71907cf8
@@ -171,7 +171,7 @@ If you shut down your anvil and then try this `anvil --block-time 5` you'll noti
 
 Send a transaction, notice it will take 5 seconds to be confirmed:
 
-`cast send 0x5FbDB2315678afecb367f032d93F642f64180aa3 "store(uint256)" 50 --rpc-url http://127.0.0.1:8545 --private-key <PRIVATE_KEY>`  
+`cast send 0x5FbDB2315678afecb367f032d93F642f64180aa3 "store(uint256)" 50 --rpc-url http://127.0.0.1:8545 --private-key <PRIVATE_KEY>`
 
 ### ADVANCED: Forking Mainnet and Testing Real Data
 
@@ -194,7 +194,6 @@ Verify your new balance:
 Stop impersonating:
 
 `cast rpc anvil_stopImpersonatingAccount 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 --rpc-url http://127.0.0.1:8545`
-
 
 ## Deploy using a script
 
@@ -309,8 +308,6 @@ So just to reiterate:
 
 - When you run `forge script script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --broadcast --private-key <PRIVATE_KEY>` Foundry connects to the running Anvil instance and actually sends the deployment transaction.
 
-
-
 ## What is a transaction
 
 What you need to remember here is that a `broadcast` folder was created. Look inside in the `run-latest.json` file and you'll see this:
@@ -377,7 +374,7 @@ You will be asked for your private key and a password to secure it. You will do 
 
 ## Interacting with a smart contract using the CLI
 
-Now we have `anvil` running and the smart contract is deployed. Copy the contact address.
+Now we have `anvil` running and the smart contract is deployed. Copy the contract address.
 
 We will use `cast send` to interact with our deployed contract:
 
