@@ -1321,6 +1321,250 @@ This prints what's stored in slot number 2 of the `fundMe` contract. This checks
 
 Storage is one of the harder Solidity subjects. Mastering it is one of the key prerequisites in writing gas-efficient and tidy smart contracts.
 
+## Optimizing the withdraw function, intro to Opcodes!
+
+Let's keep exploring storage. Open a new terminal and start a new `anvil` instance:
+
+On your original terminal deploy the `fundMe` contract:
+
+`forge script DeployFundMe --rpc-url http://127.0.0.1:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast`
+
+Grab the contract address and run (replace the address with your deployed contract's address):
+
+`cast code 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9`.
+
+You just got a big chunk of bytecode. Copy the entire thing and paste it [here](https://etherscan.io/opcode-tool), and so you obtain something that looks like this (a list of Opcodes):
+
+```bash
+[0] 'Cf'(Unknown Opcode)
+[1] PUSH31 0xd3AccA5a467e9e704C703E8D87F634fB0Fc9 60806040526004361061007e
+[2] JUMPI
+[3] PUSH0 0x
+[4] CALLDATALOAD
+[5] PUSH1 0xe0
+[6] SHR
+[7] DUP1
+[8] PUSH4 0x893d20e8
+```
+
+**Opcodes** are the fundamental instructions that the EVM understands and executes. These opcodes are essentially the building blocks that power smart contract functionality. You can read about each opcode [here](https://www.evm.codes/).
+
+In that table alongside the description, you will find the bytecode number of each opcode, the name of the opcode, the minimum gas it consumes and the input/output. Please be mindful of the gas each opcode costs. Scroll down the list until you get to the 51-55 opcode range.
+
+As you can see an MLOAD/MSTORE has a minimum gas cost of 3 and a SLOAD/SSTORE has a minimum gas of 100 ... that's over 33x. And keep in mind these are minimums. The difference is usually bigger. This is why we need to be careful with saving variables in storage, every time we access or modify them we will be forced to pay way more gas.
+
+Let's take a closer look at the `withdraw` function.
+
+We start with a `for` loop, that is initializing a variable called `funderIndex` in memory and compares it with `s_funders.length` on every loop iteration. As you know `s_funders` is the private array that holds all the funder's addresses, currently located in the state variables zone. If we have 1000 funders, we will end up reading the length of the `s_funders` array 1000 times, paying the SLOAD costs 1000 times. This is extremely inefficient.
+
+Let's rewrite the function. Add the following to your `FundMe.sol`:
+
+```solidity
+function cheaperWithdraw() public onlyOwner {
+    uint256 fundersLength = s_funders.length;
+    for(uint256 funderIndex = 0; funderIndex < fundersLength; funderIndex++) {
+        address funder = s_funders[funderIndex];
+        s_addressToAmountFunded[funder] = 0;
+    }
+    s_funders = new address[](0);
+
+    (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
+    require(callSuccess, "Call failed");
+
+}
+```
+
+First, let's cache the `s_funders` length. This means we create a new variable, inside the function (to be read as in memory) so if we read it 1000 times we don't end up paying a ridiculous amount of gas.
+
+Then let's integrate this into the for loop.
+
+The next step is getting the funder's address from storage. Sadly we can't avoid this one. After this we zero the recorded amount in the `s_addressToAmountFunded` mapping, also we can't avoid this. We then reset the `s_funders` array, and send the ETH. Both these operations cannot be avoided.
+
+Let's find out how much we saved. Open `FundMe.t.sol`.
+
+Let's copy the `testWithdrawWithMultipleFunders` function and replace the `withdraw` function with `cheaperWithdraw`.
+
+```solidity
+function testWithdrawFromMultipleFundersCheaper() public funded {
+    uint160 numberOfFunders = 10;
+    uint160 startingFunderIndex = 1;
+    for (uint160 i = startingFunderIndex; i < numberOfFunders + startingFunderIndex; i++) {
+        // we get hoax from stdcheats
+        // prank + deal
+        hoax(address(i), SEND_VALUE);
+        fundMe.fund{value: SEND_VALUE}();
+    }
+
+    uint256 startingFundMeBalance = address(fundMe).balance;
+    uint256 startingOwnerBalance = fundMe.getOwner().balance;
+
+    vm.startPrank(fundMe.getOwner());
+    fundMe.cheaperWithdraw();
+    vm.stopPrank();
+
+    assert(address(fundMe).balance == 0);
+    assert(startingFundMeBalance + startingOwnerBalance == fundMe.getOwner().balance);
+    assert((numberOfFunders + 1) * SEND_VALUE == fundMe.getOwner().balance - startingOwnerBalance);
+
+}
+```
+
+Now let's call `forge snapshot`. If we open `.gas-snapshot` we will find the following at the end:
+
+```bash
+[PASS] testWithdrawWithMultipleFunders() (gas: 510997)
+[PASS] testWithdrawWithMultipleFundersCheaper() (gas: 560138)
+```
+
+In my case this didn't work.
+
+// TODO: Find out why the gas optimization didn't work for me.
+
+## Creating Integration Tests
+
+First of all, don't forget to write a good `README.md`: A README is your project's face to the world, and investing time in making it clear, comprehensive, and engaging can significantly impact your project's success and community engagement.
+
+### Integration Tests
+
+Please create a new file called `Interactions.s.sol` in the `script` folder.
+
+In this file, we will create two scripts, one for funding and one for withdrawing.
+
+Each contract will contain one script, and for it to work each needs to inherit from the Script contract. Each contract will have a `run` function which shall be called by `forge script` when we run it.
+
+In order to properly interact with our `fundMe` contract we would want to interact only with the most recent deployment we made. This task is easily achieved using the `foundry-devops` library. Please install it using the following command:
+
+`forge install Cyfrin/foundry-devops --no-commit`
+
+Ok, now with that out of the way, let's work on our scripts.
+
+Put the following code in `Interactions.s.sol`:
+
+```solidity
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.26;
+
+import {Script, console} from "forge-std/Script.sol";
+import {FundMe} from "../src/FundMe.sol";
+import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
+
+contract FundFundMe is Script {
+    uint256 SEND_VALUE = 0.1 ether;
+
+    function fundFundMe(address mostRecentlyDeployed) public {
+        vm.startBroadcast();
+        FundMe(payable(mostRecentlyDeployed)).fund{value: SEND_VALUE}();
+        vm.stopBroadcast();
+        console.log("Funded FundMe with %s", SEND_VALUE);
+    }
+
+    function run() external {
+        address mostRecentlyDeployed = DevOpsTools.get_most_recent_deployment("FundMe", block.chainid);
+        fundFundMe(mostRecentlyDeployed);
+    }
+}
+
+contract WithdrawFundMe is Script {
+    function withdrawFundMe(address mostRecentlyDeployed) public {
+        vm.startBroadcast();
+        FundMe(payable(mostRecentlyDeployed)).withdraw();
+        vm.stopBroadcast();
+        console.log("Withdraw FundMe balance!");
+    }
+
+    function run() external {
+        address mostRecentlyDeployed = DevOpsTools.get_most_recent_deployment("FundMe", block.chainid);
+        withdrawFundMe(mostRecentlyDeployed);
+    }
+
+}
+```
+
+Integration tests are crucial for verifying how your smart contract interacts with other contracts, external APIs, or decentralized oracles that provide data feeds. These tests help ensure your contract can properly receive and process data, send transactions to other contracts, and function as intended within the wider ecosystem.
+
+Before starting with the integration tests let's organize our tests into folders.
+
+Create two new folders called integration and unit inside the test folder. Move `FundMe.t.sol` inside the `unit` folder. Update the imports in `FundMe.t.sol`.
+
+Run a quick `forge test` to ensure that everything builds and all tests pass.
+
+Inside the integration folder create a new file called `FundMeTestIntegration.t.sol`.
+
+Paste the following code inside it:
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.26;
+
+import {DeployFundMe} from "../../script/DeployFundMe.s.sol";
+import {FundFundMe, WithdrawFundMe} from "../../script/Interactions.s.sol";
+import {FundMe} from "../../src/FundMe.sol";
+import {Test, console} from "forge-std/Test.sol";
+
+contract InteractionsTest is Test {
+    FundMe public fundMe;
+    DeployFundMe deployFundMe;
+
+    uint256 public constant SEND_VALUE = 0.1 ether;
+    uint256 public constant STARTING_USER_BALANCE = 10 ether;
+
+    address alice = makeAddr("alice");
+
+
+    function setUp() external {
+        deployFundMe = new DeployFundMe();
+        fundMe = deployFundMe.run();
+        vm.deal(alice, STARTING_USER_BALANCE);
+    }
+
+    function testUserCanFundAndOwnerWithdraw() public {
+        uint256 preUserBalance = address(alice).balance;
+        uint256 preOwnerBalance = address(fundMe.getOwner()).balance;
+
+        // Using vm.prank to simulate funding from the USER address
+        vm.prank(alice);
+        fundMe.fund{value: SEND_VALUE}();
+
+        WithdrawFundMe withdrawFundMe = new WithdrawFundMe();
+        withdrawFundMe.withdrawFundMe(address(fundMe));
+
+        uint256 afterUserBalance = address(alice).balance;
+        uint256 afterOwnerBalance = address(fundMe.getOwner()).balance;
+
+        assert(address(fundMe).balance == 0);
+        assertEq(afterUserBalance + SEND_VALUE, preUserBalance);
+        assertEq(preOwnerBalance + SEND_VALUE, afterOwnerBalance);
+    }
+
+}
+```
+
+You will see that the first half, including the `setUp` is similar to what we did in `FundMe.t.sol`. The test `testUserCanFundAndOwnerWithdraw` has a similar structure to `testWithdrawWithASingleFunder` from `FundMe.t.sol`. We record the starting balances, we use `alice` to fund the contract then the `WithdrawFundMe` script to call withdraw. The next step is recording the ending balances and running the same assertions we did in `FundMe.t.sol`.
+
+Run the integration test using the following command:
+
+`forge test --mt testUserCanFundAndOwnerWithdraw -vv`
+
+Pfew! I know this was a lot. You are a true champion 🏆🏆🏆 for reaching this point!
+
+Note 1: Depending on when you go through this lesson there is a small chance that foundry-devops library has a problem that prevents you from building. The reason this happening is vm.keyExists used at foundry-devops/src/DevOpsTools.sol:119 is deprecated. Please replace vm.keyExists with vm.keyExistsJson in the place indicated. Next, we need to make sure that the Vm.sol contract in your forge-std library contains the vm.keyExistsJson. If you can't find it in your Vm.sol then please run the following command in your terminal: forge update --force. If you still can't forge build the project the please come ask questions in the Updraft section of Cyfrin's discord.
+
+Note2:
+
+Inside the video lesson, Patrick touched on the subject of ffi. We didn't present it at length in the body of this lesson because foundry-devops doesn't need it anymore. But in short:
+
+Forge FFI, which stands for Foreign Function Interface, is a cheatcode within the Forge testing framework for Solidity. It allows you to execute arbitrary shell commands directly from your Solidity test code.
+
+FFI enables you to call external programs or scripts from within your Solidity tests.
+
+You provide the command or script name along with any arguments as an array of strings.
+
+The Forge testing framework then executes the command in the underlying system environment and captures the output.
+
+Read more about it [here](https://book.getfoundry.sh/cheatcodes/ffi?highlight=ffi#ffi).
+
+A word of caution: FFI bypasses the normal security checks and limitations of Solidity. By running external commands, you introduce potential security risks if not used carefully. Malicious code within the commands you execute could compromise your setup. Whenever you clone repos or download other projects please make sure they don't have ffi = true in their foundry.toml file. If they do, we advise you not to run anything before you thoroughly examine where ffi is used and what commands is it calling. Stay safe!
 
 ## ❓ Questions and 💪 Exercises
 
