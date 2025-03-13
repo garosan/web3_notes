@@ -551,7 +551,7 @@ contract HelperConfig {
     NetworkConfig public activeNetworkConfig;
 
     struct NetworkConfig {
-        address priceFeed; // ETH/USD price feed address
+        address priceFeed; // ETH/USD priceFeed address
     }
 
     constructor() {
@@ -600,7 +600,7 @@ contract DeployFundMe is Script {
 }
 ```
 
-If we now run `forge test --fork-url $SEPOLIA_RPC_URL` the test should pass correctly.
+If we now run `forge test --fork-url $SEPOLIA_RPC_URL` the test should pass correctly, meaning we haven't broken anything.
 
 ## 💪 Exercises Time
 
@@ -769,6 +769,32 @@ contract MockV3Aggregator is AggregatorV3Interface {
 ```
 
 Now let's import this in our `HelperConfig.s.sol` file and deploy it in our `getAnvilEthConfig` function, then return the address.
+
+Make these changes to `HelperConfig.s.sol`:
+
+```solidity
+import {MockV3Aggregator} from "../test/mocks/MockV3Aggregator.sol";
+
+[...]
+
+// In state variables section
+MockV3Aggregator mockPriceFeed;
+
+[...]
+
+function getAnvilEthConfig() public returns (NetworkConfig memory) {
+    vm.startBroadcast();
+    mockPriceFeed = new MockV3Aggregator(8, 2000e8);
+    vm.stopBroadcast();
+
+    NetworkConfig memory anvilConfig = NetworkConfig({
+        priceFeed: address(mockPriceFeed)
+    });
+
+    return anvilConfig;
+
+}
+```
 
 If everything went well, run `forge test` and you will see your tests passing. Awesome 👏👏
 
