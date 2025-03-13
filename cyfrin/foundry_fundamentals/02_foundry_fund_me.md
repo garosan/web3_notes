@@ -1124,12 +1124,72 @@ function testWithdrawWithASingleFunder() public funded {
 
 Now we run `forge test --mt testWithdrawWithASingleFunder` and it works!
 
+Let's do one last test called `testWithdrawWithMultipleFunders()`, this is the final code:
+
+```solidity
+function testWithdrawWithMultipleFunders() public funded {
+    // Arrange
+    uint160 numberOfFunders = 10;
+    uint160 startingFunderIndex = 1;
+
+    for (uint160 i = startingFunderIndex; i < numberOfFunders; i++) {
+        // This is like vm.prank and vm.deal combined
+        hoax(address(i), SEND_VALUE);
+        fundMe.fund{value: SEND_VALUE}();
+    }
+
+    uint256 startingOwnerBalance = fundMe.getOwner().balance;
+    uint256 startingFundMeBalance = address(fundMe).balance;
+
+    // Act
+    vm.startPrank(fundMe.getOwner());
+    fundMe.withdraw();
+    vm.stopPrank();
+
+    // Assert
+    assert(address(fundMe).balance == 0);
+    assert(
+        startingFundMeBalance + startingOwnerBalance ==
+            fundMe.getOwner().balance
+    );
+}
+```
+
+Now if we run `forge test --mt testWithdrawWithMultipleFunders` it works again. Sweet!
+
+If we run `forge coverage` the coverage looks a lot better now.
+
+## Introduction to Foundry Chisel
+
+`Chisel` is one of the 4 components of Foundry alongside `forge`, `cast` and `anvil`. It's a tool that allows users to quickly test the behavior of Solidity code on a local (anvil) or forked network. It's basically a `REPL` shell.
+
+Here's the [Chisel Reference page](https://book.getfoundry.sh/reference/chisel/)
+
+## Chisel to calculate withdraw gas costs
+
+An important aspect of smart contract development is making your code efficient to minimize the gas you/other users spend when calling functions. This can have a serious impact on user retention for your protocol. Imagine you have to exchange 0.1 ETH for 300 USDC, but you have to pay 30 USDC in gas fees. No one wants to pay that. It's your duty as a developer to minimize gas consumption.
+
+Now how do we find out how much gas things cost?
+
+Run the following command in your terminal:
+
+`forge snapshot --mt testWithdrawWithASingleFunder`
+
+You'll see that a new file appeared in your project root folder: `.gas-snapshot`. When you open it you'll find the following:
+
+`FundMeTest:testWithdrawWithASingleFunder() (gas: 84824)`
+
+This means that calling that test function consumes `84824` gas. How do we find out what this means in \$?
+
+Etherscan provides a cool tool that we can use: <https://etherscan.io/gastracker>. Here, at the moment I'm writing this lesson, it says that the gas price is around `7 gwei`. If we multiply the two it gives us a total price of `593,768 gwei`. Ok, at least that's an amount we can work with. Now we will use the handy [Alchemy converter](https://www.alchemy.com/gwei-calculator) to find out that `593,768 gwei = 0.000593768 ETH` and `1 ETH = 2.975,59 USD` according to [Coinmarketcap](https://coinmarketcap.com/) meaning that our transaction would cost `1.77 USD` on Ethereum mainnet. Let's see if we can lower this.
+
 
 ## ❓ Questions and 💪 Exercises
 
 - Question ❓: What is this AggregatorV3Interface.sol file? What exactly does it do?
 - Question ❓: What are the differences between using a `require` and a `revert` in our `onlyOwner()` modifier?
 - Question ❓: You added some console.logs to your tests, you run `forge test` and you don't see them. What is missing?
+- Question ❓: Why did we have to use a `uint160` when passing a number to generate an address in our tests?
 
 ## 🛠️ Links and Resources
 
