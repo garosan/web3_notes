@@ -1007,6 +1007,123 @@ And now it passes. Congratulations 🥳!
 
 Keep in mind that these are the most important cheatcodes there are, and you are going to use them over and over again. Regardless if you are developing or auditing a project, that project will always have at least an `owner` and a `user`. These two would always have different access to different functionalities. Most of the time the user needs some kind of balance, be it ETH or some other tokens. So, making a new address, giving it some balance, and pranking it to act as a caller for a tx will 100% be part of your every test file.
 
+## Adding more coverage
+
+In the previous lesson, we tested if the `s_addressToAmountFunded` is updated correctly. Continuing from there we need to test that `funders` array is updated with `msg.sender`.
+
+Add the following test to your `FundMe.t.sol`:
+
+```solidity
+function testAddsFunderToArrayOfFunders() public {
+    vm.startPrank(USER);
+    fundMe.fund{value: SEND_VALUE}();
+    vm.stopPrank();
+
+    address funder = fundMe.getFunder(0);
+    assertEq(funder, USER);
+}
+```
+
+Run the test using `forge test --mt testAddsFunderToArrayOfFunders`. It passed, perfect!
+
+Each of our tests uses a fresh `setUp`, so if we run all of them and `testFundUpdatesFundDataStructure` calls `fund`, that won't be persistent for `testAddsFunderToArrayOfFunders`.
+
+Moving on, we should test the `withdraw` function. Let's check that only the owner can `withdraw`.
+
+Add the following test to your `FundMe.t.sol`:
+
+```solidity
+function testOnlyOwnerCanWithdraw() public {
+    vm.prank(USER);
+    fundMe.fund{value: SEND_VALUE}();
+
+    vm.expectRevert();
+    vm.prank(USER);
+    fundMe.withdraw();
+}
+```
+
+**REMEMBER:** Whenever you have a situation where two or more `vm` cheatcodes come one after the other keep in mind that these would ignore one another. Cheatcodes affect transactions, not other cheatcodes.
+
+Run the test using `forge test --mt testOnlyOwnerCanWithdraw` and it should pass.
+
+As you can see, in both `testAddsFunderToArrayOfFunders()` and `testOnlyOwnerCanWithdraw()` we used `USER` to fund the contract, but when we're writing hundreds of tests, there's a better way.
+
+Sometimes multiple tests will share some building blocks. We can define these building blocks using modifiers to dramatically increase our efficiency in writing tests.
+
+Add the following modifier to your FundMe.t.sol:
+
+```solidity
+modifier funded() {
+    vm.prank(alice);
+    fundMe.fund{value: SEND_VALUE}();
+    assert(address(fundMe).balance > 0);
+    _;
+
+}
+```
+
+We first use the `vm.prank` cheatcode to signal the fact that the next transaction will be called by `USER`. We call `fund` and then we assert that the balance of the `fundMe` contract is higher than 0, if true, it means that `USER`'s transaction was successful. Every single time we need our contract funded we can use this modifier to do it.
+
+Now we can refactor `testOnlyOwnerCanWithdraw()`:
+
+```solidity
+function testOnlyOwnerCanWithdraw() public funded {
+    vm.expectRevert();
+    fundMe.withdraw();
+}
+```
+
+Ok, we've tested that a non-owner cannot withdraw. But **can the owner withdraw**?
+
+To test this we will need a new getter function. Add the following to the `FundMe.sol` file next to the other getter functions:
+
+```solidity
+function getOwner() public view returns (address) {
+    return i_owner;
+}
+```
+
+Make sure to make `i_owner` `private`.
+
+The **arrange-act-assert (AAA) methodology** is one of the simplest and most universally accepted ways to write tests. As the name suggests, it comprises three parts:
+
+- **Arrange**: Set up the test by initializing variables, and objects and prepping preconditions.
+- **Act**: Perform the action to be tested like a function invocation.
+- **Assert**: Compare the received output with the expected output.
+
+We will start our test like so:
+
+```solidity
+function testWithdrawWithASingleFunder() public funded {
+    // Arrange
+    // Act
+    // Assert
+}
+```
+
+Now:
+
+```solidity
+function testWithdrawWithASingleFunder() public funded {
+    // Arrange
+    uint256 startingOwnerBalance = fundMe.getOwner().balance;
+    uint256 startingFundMeBalance = address(fundMe).balance;
+
+    // Act
+    vm.prank(fundMe.getOwner());
+    fundMe.withdraw();
+
+    // Assert
+    uint256 endingOwnerBalance = fundMe.getOwner().balance;
+    uint256 endingFundMeBalance = address(fundMe).balance;
+    assertEq(endingFundMeBalance, 0);
+    assertEq(startingFundMeBalance + startingOwnerBalance, endingOwnerBalance);
+}
+```
+
+Now we run `forge test --mt testWithdrawWithASingleFunder` and it works!
+
 
 ## ❓ Questions and 💪 Exercises
 
