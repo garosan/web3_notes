@@ -869,7 +869,143 @@ function testFundFailsWIthoutEnoughETH() public {
 
 Run `forge test`. We are attempting to fund the contract with `0` value, it reverts and our test passes.
 
+Now let's refactor a bit more in `FundMe.sol`:
 
+- As we've discussed before storage variables should start with `s_`. Change all the `addressToAmountFunded` mentions to `s_addressToAmountFunded` and all the `funders` to `s_funders`
+- Also change the visibility of these variables to `private`. Private variables are more gas-efficient than public ones.
+
+Call a quick `forge test` to make sure nothing broke anywhere.
+
+Now that we made those two variables private, we need to write some getters for them. Please add the following at the end of `FundMe.sol` (but before `fallback()` and `receive()`):
+
+```solidity
+/** Getter Functions */
+
+function getAddressToAmountFunded(address fundingAddress) public view returns (uint256) {
+    return s_addressToAmountFunded[fundingAddress];
+}
+
+function getFunder(uint256 index) public view returns (address) {
+    return s_funders[index];
+
+}
+```
+
+Great. Now we can test points 2 and 3 of the `fund()` function. Add the following in `FundMe.t.sol`:
+
+```solidity
+function testFundUpdatesFundDataStructure() public {
+    fundMe.fund{value: 10 ether}();
+    uint256 amountFunded = fundMe.getAddressToAmountFunded(msg.sender);
+    assertEq(amountFunded, 10 ether);
+
+}
+```
+
+Run `forge test --mt testFundUpdatesFundDataStructure` aaand it fails.
+
+Put `address(this)` instead of `msg.sender`. Now it passed, but we still don't quite get why.
+
+**User management** is a very important aspect you need to take care of when writing tests. Imagine you are writing a more complex contract, where you have different user roles, maybe the `owner` has some privileges, different from an `admin` who has different privileges from a `minter`, who, as you've guessed, has different privileges from the `end user`. How can we differentiate all of them in our testing? We need to make sure we can write tests about who can do what.
+
+As always, Foundry can help us with that. Please **remember the cheatcodes below, you are going to use them thousands of times**.
+
+1. [prank](https://book.getfoundry.sh/cheatcodes/prank)
+   "Sets `msg.sender` to the specified address for the next call. *The next call* includes static calls as well, but not calls to the cheat code address."
+
+2. [startPrank](https://book.getfoundry.sh/cheatcodes/start-prank) and [stopPrank](https://book.getfoundry.sh/cheatcodes/stop-prank)
+   `startPrank` sets `msg.sender` for all subsequent calls until `stopPrank` is called. Everything between the `vm.startPrank` and `vm.stopPrank` is signed by the address you provide inside the ().
+
+To create a new user address we can use the `makeAddr` cheatcode. Read more about it [here](https://book.getfoundry.sh/reference/forge-std/make-addr).
+
+Add the following line at the start of your `FundMeTest` contract:
+
+`address USER = makeAddr("user");`
+
+Now whenever we need a user to call a function we can use `prank` and `USER` to run our tests.
+
+To further increase the readability of our contract, let's avoid using a magic number for the funded amount. Create a constant variable called `SEND_VALUE` and give it the value of `0.1 ether` (don't be scared by the floating number which technically doesn't work with Solidity - `0.1 ether` means `10 ** 17 ether`):
+
+```solidity
+address USER = makeAddr("user");
+uint256 public constant SEND_VALUE = 0.1 ether;
+```
+
+Back to our test, update your test function `testFundUpdatesFundDataStructure()` in `FundMe.t.sol`:
+
+```solidity
+function testFundUpdatesFundDataStructure() public {
+    vm.prank(USER);
+    fundMe.fund{value: SEND_VALUE}();
+    uint256 amountFunded = fundMe.getAddressToAmountFunded(USER);
+    assertEq(amountFunded, SEND_VALUE);
+
+}
+```
+
+Finally, now let's run `forge test --mt testFundUpdatesFundDataStructure`. It fails ... again!
+
+But why? Let's call `forge test --mt testFundUpdatesFundDataStructure -vvv` to get more information about where and why it fails.
+
+Turns out our `USER` address doesn't have any funds. But there's always a cheatcode to help us. `deal` allows us to set the ETH balance of a user. Read more about it [here](https://book.getfoundry.sh/cheatcodes/deal).
+
+Now let's add `uint256 constant STARTING_BALANCE = 10 ether;` and add this line `vm.deal(USER, STARTING_BALANCE);` at the end of your `setUp()` function.
+
+The whole file should now look like this:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+
+import {Test, console} from "forge-std/Test.sol";
+import {FundMe} from "../src/FundMe.sol";
+import {DeployFundMe} from "../script/DeployFundMe.s.sol";
+
+contract FundMeTest is Test {
+    address USER = makeAddr("user");
+    uint256 public constant SEND_VALUE = 0.1 ether;
+    uint256 constant STARTING_BALANCE = 10 ether;
+    FundMe fundMe;
+    DeployFundMe deployFundMe;
+
+    function setUp() external {
+        deployFundMe = new DeployFundMe();
+        fundMe = deployFundMe.run();
+        vm.deal(USER, STARTING_BALANCE);
+    }
+
+    function testMinimumDollarIsFive() public view {
+        assertEq(fundMe.MINIMUM_USD(), 5e18);
+    }
+
+    function testOwnerIsMsgSender() public view {
+        assertEq(fundMe.i_owner(), msg.sender);
+    }
+
+    function testPriceFeedVersionIsAccurate() public view {
+        uint256 version = fundMe.getVersion();
+        assertEq(version, 4);
+    }
+
+    function testFundFailsWIthoutEnoughETH() public {
+        vm.expectRevert(); // <- The next line after this one should revert! If not test fails.
+        fundMe.fund(); // <- We send 0 value
+    }
+
+    function testFundUpdatesFundDataStructure() public {
+        vm.prank(USER);
+        fundMe.fund{value: SEND_VALUE}();
+        uint256 amountFunded = fundMe.getAddressToAmountFunded(USER);
+        assertEq(amountFunded, SEND_VALUE);
+    }
+}
+```
+
+Let's run `forge test --mt testFundUpdatesFundDataStructure` again.
+
+And now it passes. Congratulations 🥳!
+
+Keep in mind that these are the most important cheatcodes there are, and you are going to use them over and over again. Regardless if you are developing or auditing a project, that project will always have at least an `owner` and a `user`. These two would always have different access to different functionalities. Most of the time the user needs some kind of balance, be it ETH or some other tokens. So, making a new address, giving it some balance, and pranking it to act as a caller for a tx will 100% be part of your every test file.
 
 
 ## ❓ Questions and 💪 Exercises
