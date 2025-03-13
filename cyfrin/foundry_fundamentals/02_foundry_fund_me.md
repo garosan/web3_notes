@@ -225,7 +225,7 @@ Create a new file called `DeployFundMe.s.sol` in `script` folder. Please use the
 It should look like this:
 
 ```solidity
-// SPDX-License_identifier: MIT
+// SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.26;
 
@@ -288,6 +288,8 @@ Remember to add it to source with `source .env`.
 Then run `forge test --mt testPriceFeedVersionIsAccurate --fork-url $SEPOLIA_RPC_URL`
 
 You can run `forge coverage --fork-url $SEPOLIA_RPC_URL` to check your total code coverage.
+
+Obviously `forge coverage` runs your test suite, so in this case we are adding the `--fork-url` flag so that all tests pass, but normally you want to run just `forge coverage` to get the test suite coverage.
 
 ## Refactoring your tests
 

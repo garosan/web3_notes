@@ -10,3 +10,6 @@
 - Practical Frameworks - Foundry
 - More In-Depth - Smart Contract Security
 - More Resources on Sonic
+
+A digital signature is a mathematical scheme for verifying the authenticity of digital messages or documents.
+https://en.wikipedia.org/wiki/Digital_signature
