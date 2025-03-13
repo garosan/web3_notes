@@ -798,6 +798,80 @@ function getAnvilEthConfig() public returns (NetworkConfig memory) {
 
 If everything went well, run `forge test` and you will see your tests passing. Awesome 👏👏
 
+## 🎩 Magic Numbers
+
+Magic numbers refer to literal values directly included in the code without any explanation or context. We should always avoid magic numbers.
+
+Write clean, maintainable, and less error-prone code. You make your own life easier, you make your auditor(s) life easier. Use constants and configuration variables.
+
+Open `HelperConfig.s.sol`, go to the `getAnvilEthConfig` function and delete the `8` corresponding to the decimals and `2000e8` corresponding to the `_initialAnswer` that are used inside the `MockV3Aggregator`'s constructor.
+
+At the top of the `HelperConfig` contract create two new variables:
+
+```solidity
+uint8 public constant DECIMALS = 8;
+int256 public constant INITIAL_PRICE = 2000e8;
+```
+
+Now replace the deleted magic numbers:
+
+```solidity
+vm.startBroadcast();
+mockPriceFeed = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
+vm.stopBroadcast();
+```
+
+## More fine-tuning and refactoring
+
+One thing that we should do that would make our `getAnvilEthConfig()` more efficient is to check if we already deployed the `mockPriceFeed` before deploying it once more.
+
+Remember how addresses that are declared but aren't initialized default to address zero? We can use this to create our check.
+
+Add this at the top of our `getAnvilEthConfig()` function:
+
+```solidity
+if (activeNetworkConfig.priceFeed != address(0)) {
+    return activeNetworkConfig;
+}
+```
+
+Also, to be more precise in our naming, let's rename `getAnvilEthConfig()` to `getOrCreateAnvilEthConfig()` and update in the constructor too.
+
+Great. Now if you run `forge test` everything should work fine.
+
+And if you're like me and explored a couple other options, run `forge test --fork-url $SEPOLIA_RPC_URL` and `forge test --fork-url $OPTIMISM_SEPOLIA_RPC_URL` and they should both work correctly.
+
+## Foundry Test Cheatcodes
+
+Let's now try to increase that test coverage. Call `forge coverage`. Not all things require 100% coverage, or maybe achieving 100% coverage is too time expensive, but ... 12-13%? That is a joke, we can do way better than that.
+
+Let's take a look at the `fund` function in `FundMe.sol` for a second. What should it do?
+
+- `fund` should revert if our `msg.value` converted to USDC is lower than `MINIMUM_USD`
+- The `addressToAmountFunded` mapping should be updated appropriately to show the funded value;
+- The `funders` array should be updated with `msg.sender`
+
+To test all this we will learn to use one of Foundry's main features: Cheatcodes.
+
+From the docs: *Cheatcodes give you powerful assertions, the ability to alter the state of the EVM, mock data, and more.*
+
+We will first use `expectRevert`. You can read all about it [here](https://book.getfoundry.sh/cheatcodes/expect-revert).
+
+Open `FundMe.t.sol` and add the following function:
+
+```solidity
+function testFundFailsWIthoutEnoughETH() public {
+    vm.expectRevert(); // <- The next line after this one should revert! If not test fails.
+    fundMe.fund();     // <- We send 0 value
+
+}
+```
+
+Run `forge test`. We are attempting to fund the contract with `0` value, it reverts and our test passes.
+
+
+
+
 ## ❓ Questions and 💪 Exercises
 
 - Question ❓: What is this AggregatorV3Interface.sol file? What exactly does it do?
@@ -812,3 +886,4 @@ If everything went well, run `forge test` and you will see your tests passing. A
 - [Forge test](https://book.getfoundry.sh/reference/cli/forge/test)
 - [Forge console.log](https://book.getfoundry.sh/reference/forge-std/console-log)
 - [Forge coverage](https://book.getfoundry.sh/reference/forge/forge-coverage)
+- [Foundry Cheatcodes](https://book.getfoundry.sh/cheatcodes/)
