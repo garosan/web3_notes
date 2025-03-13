@@ -1177,11 +1177,149 @@ Run the following command in your terminal:
 
 You'll see that a new file appeared in your project root folder: `.gas-snapshot`. When you open it you'll find the following:
 
-`FundMeTest:testWithdrawWithASingleFunder() (gas: 84824)`
+`FundMeTest:testWithdrawWithASingleFunder() (gas: 90743)`
 
-This means that calling that test function consumes `84824` gas. How do we find out what this means in \$?
+This means that calling that test function consumes `90743` gas. How do we find out what this means in \$?
 
-Etherscan provides a cool tool that we can use: <https://etherscan.io/gastracker>. Here, at the moment I'm writing this lesson, it says that the gas price is around `7 gwei`. If we multiply the two it gives us a total price of `593,768 gwei`. Ok, at least that's an amount we can work with. Now we will use the handy [Alchemy converter](https://www.alchemy.com/gwei-calculator) to find out that `593,768 gwei = 0.000593768 ETH` and `1 ETH = 2.975,59 USD` according to [Coinmarketcap](https://coinmarketcap.com/) meaning that our transaction would cost `1.77 USD` on Ethereum mainnet. Let's see if we can lower this.
+Etherscan provides a cool tool that we can use: <https://etherscan.io/gastracker>. Today 13-MAR-2025 at 3:30pm CST, it says that the gas price is around `0.7 gwei`. If we multiply the two it gives us a total price of `63520 gwei`. Ok, at least that's an amount we can work with. Now we will use the handy [Alchemy converter](https://www.alchemy.com/gwei-calculator) to find out that `63520 gwei = 0.00006352 ETH` and `1 ETH = 1844.67 USD` according to [Coinmarketcap](https://coinmarketcap.com/) meaning that our transaction would cost `0.11 USD` on Ethereum mainnet. Let's see if we can lower this.
+
+Looking closer at the `testWithdrawWithASingleFunder()` we can observe that we found out the initial balances, then we called a transaction and then we asserted that `startingFundMeBalance + startingOwnerBalance` matches the expected balance, but inside that test we called `withdraw` which should have cost gas. Why didn't the gas we paid affect our balances? Simple, for testing purposes the Anvil gas price is defaulted to `0` (different from what we talked about above in the case of Ethereum mainnet where the gas price was around `0.7 gwei`), so it wouldn't interfere with our testing.
+
+Let's change that and force the `withdraw` transaction to have a gas price.
+
+At the top of your `FundMe.t.sol` contract define the following variable:
+
+`uint256 constant GAS_PRICE = 1;`
+
+and refactor the `testWithdrawWithASingleFunder` function as follows:
+
+```solidity
+function testWithdrawWithASingleFunder() public funded {
+    // Arrange
+    uint256 startingFundMeBalance = address(fundMe).balance;
+    uint256 startingOwnerBalance = fundMe.getOwner().balance;
+
+    vm.txGasPrice(GAS_PRICE);
+    uint256 gasStart = gasleft();
+
+    // Act
+    vm.startPrank(fundMe.getOwner());
+    fundMe.withdraw();
+    vm.stopPrank();
+
+    uint256 gasEnd = gasleft();
+    uint256 gasUsed = (gasStart - gasEnd) * tx.gasprice;
+    console.log("Withdraw consumed: %d gas", gasUsed);
+
+    // Assert
+    uint256 endingFundMeBalance = address(fundMe).balance;
+    uint256 endingOwnerBalance = fundMe.getOwner().balance;
+    assertEq(endingFundMeBalance, 0);
+    assertEq(
+        startingFundMeBalance + startingOwnerBalance,
+        endingOwnerBalance
+    );
+
+}
+```
+
+Let's review what we changed:
+
+1. We used a new cheatcode called `vm.txGasPrice`, this sets up the transaction gas price for the next transaction. Read more about it [here](https://book.getfoundry.sh/cheatcodes/tx-gas-price).
+2. We used `gasleft()` to find out how much gas we had before and after we called the transaction. Then we subtracted them to find out how much the `withdraw` transaction consumed. `gasleft()` is a built-in Solidity function that returns the amount of gas remaining in the current Ethereum transaction.
+3. Then we logged the consumed gas. Read more about [Console Logging here](https://book.getfoundry.sh/reference/forge-std/console-log)
+
+Let's run the test:
+
+`forge test --mt testWithdrawWithASingleFunder -vv`
+
+## Intro to Storage Optimization
+
+Let's learn how we can optimize gas better now
+
+By now you know that **storage** is that area within the blockchain were our contract's state variables and data live. Each storage space has a capacity of 32 bytes. Let's review this topic more in depth:
+
+### Layout of State Variables in Storage
+
+The [Solidity documentation](https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html) is extremely good for understanding this subject.
+
+These are the important aspects in a nutshell:
+
+- Each storage slot has 32 bytes;
+- The slots numbering starts from 0;
+- Data is stored contiguously starting with the first variable placed in the first slot;
+- Dynamically-sized arrays and mappings are treated differently (we'll discuss them below);
+- The size of each variable, in bytes, is given by its type;
+- If possible, multiple variables < 32 bytes are packed together;
+- If not possible, a new slot will be started;
+- Immutable and Constant variables are baked right into the bytecode of the contract, thus they don't use storage slots.
+
+Then comes a practical example that I recommend you check directly at: https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/solidity-storage-optimization?lesson_format=transcript.
+
+To avoid confusion, remember that a `uint256` holds 256 bits or 32 bytes. So one `uint256` that takes all up its space would fill exactly one 32byte storage slot.
+
+Finally, **mappings and Dynamic Arrays** can't be stored in between the state variables as we did above. That's because we don't quite know how many elements they would have. Without knowing that we can't mitigate the risk of overwriting another storage variable. The elements of mappings and dynamic arrays are stored in a different place that's computed using the Keccak-256 hash.
+
+Back in our contracts, add the following getter in `FundMe.sol`:
+
+```solidity
+function getPriceFeed() public view returns (AggregatorV3Interface) {
+    return s_priceFeed;
+
+}
+```
+
+Then add the following function in your `FundMe.t.sol`:
+
+```solidity
+function testPrintStorageData() public view {
+    for (uint256 i = 0; i < 3; i++) {
+        bytes32 value = vm.load(address(fundMe), bytes32(i));
+        console.log("Value at location", i, ":");
+        console.logBytes32(value);
+    }
+    console.log("PriceFeed address:", address(fundMe.getPriceFeed()));
+
+}
+```
+
+In the test above we used a new cheatcode: `vm.load`. Its sole purpose is to load the value found in the provided storage slot of the provided address. Read more about it [here](https://book.getfoundry.sh/cheatcodes/load).
+
+Now run the test: `forge test --mt testPrintStorageData -vv`.
+
+Let's interpret the resulting data:
+
+- In `slot 0` we have a bytes32(0) stored (or 32 zeroes). This happened because the first slot is assigned to the `s_addressToAmountFunded` mapping.
+- In `slot 1` we have a bytes32(0) stored. This happened because the second slot is assigned to the `s_funders` dynamic array.
+- In `slot 2` we have `0x00000000000000000000000090193c961a926261b756d1e5bb255e67ff9498a1` stored. This is composed of 12 pairs of zeroes (12 x 00) corresponding to the first 12 bytes and `90193c961a926261b756d1e5bb255e67ff9498a1`. If you look on the next line you will see that is the `priceFeed` address.
+
+This is one of the methods of checking the storage of a smart contract.
+
+Another popular method is using `forge inspect`. This is used to obtain information about a smart contract. Read more about it [here](https://book.getfoundry.sh/reference/forge/forge-inspect).
+
+Call the following command in your terminal:
+
+`forge inspect FundMe storageLayout`
+
+Another method of checking a smart contract's storage is by using `cast storage`. For this one, we need a bit of setup.
+
+Open a new terminal, and type `anvil` to start a new `anvil` instance.
+
+Deploy the `fundMe` contract using the following script:
+
+`forge script DeployFundMe --rpc-url http://127.0.0.1:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast`
+
+The rpc url used is the standard `anvil` rpc. The private key used is the first of the 10 private keys `anvil` provides.
+
+Find the address of the newly deployed `fundMe`. In my case, this is `0x5FbDB2315678afecb367f032d93F642f64180aa3`.
+
+Call the following command in your terminal:
+
+`cast storage 0x5FbDB2315678afecb367f032d93F642f64180aa3 2`
+
+This prints what's stored in slot number 2 of the `fundMe` contract. This checks with our previous methods of finding what's in slot number 2 (even if the address is different between methods).
+
+Storage is one of the harder Solidity subjects. Mastering it is one of the key prerequisites in writing gas-efficient and tidy smart contracts.
 
 
 ## ❓ Questions and 💪 Exercises
