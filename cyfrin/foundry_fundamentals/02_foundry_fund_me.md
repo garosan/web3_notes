@@ -427,13 +427,21 @@ Take a moment and think if we missed updating anything in our project.
 
 You probably know the answer, right? We are missing to provide the priceFeed address in our deploy script and in our test. Let's hardcode it for now:
 
-`DeployFundMe.s.sol` should have this now:
+`DeployFundMe.s.sol` should be updated with this now:
 
 ```solidity
-vm.startBroadcast();
-new FundMe(0x694AA1769357215DE4FAC081bf1f309aDC325306);
-vm.stopBroadcast();
+function run() external returns (FundMe) {
+    vm.startBroadcast();
+    FundMe fundMe = new FundMe(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+    vm.stopBroadcast();
+    return fundMe;
+}
 ```
+
+Finally, back in `FundMe.sol`, we also need to pass the `s_priceFeed` as input for `getConversionRate` in the `fund` function:
+
+`msg.value.getConversionRate(s_priceFeed) >= MINIMUM_USD,`
+
 
 Now we could do the same thing for our tests, but it would then become tedious and not a great practice to keep updating things in both files, so let's modify our deploy script so that we can use it in our test file. Your `DeployFundMe.s.sol` should look like this:
 
@@ -477,7 +485,7 @@ contract FundMeTest is Test {
     }
 ```
 
-Let's call a `forge test --fork-url $SEPOLIA_RPC_URL` to make sure everything compiles.
+Let's call `forge test --fork-url $SEPOLIA_RPC_URL` to make sure everything compiles.
 
 Looks like the `testOwnerIsMsgSender` fails again. Take a moment and think about why.
 
