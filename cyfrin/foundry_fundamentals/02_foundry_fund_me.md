@@ -1566,6 +1566,112 @@ Read more about it [here](https://book.getfoundry.sh/cheatcodes/ffi?highlight=ff
 
 A word of caution: FFI bypasses the normal security checks and limitations of Solidity. By running external commands, you introduce potential security risks if not used carefully. Malicious code within the commands you execute could compromise your setup. Whenever you clone repos or download other projects please make sure they don't have ffi = true in their foundry.toml file. If they do, we advise you not to run anything before you thoroughly examine where ffi is used and what commands is it calling. Stay safe!
 
+## Automate smart contract actions with a Makefile
+
+If you think a bit about your experience with the whole `FundMe` project by now, how many times have you written a `forge script NameOfScript --rpc-url xyz --private-key 0xPrivateKey ...`. There's got to be an easier way to run scripts and other commands.
+
+The answer for all your troubles is a `Makefile`!
+
+A `Makefile` is a special file used in conjunction with the `make` command in Unix-based systems and some other environments. It provides instructions for automating the process of building software projects.
+
+The main advantages of using a `Makefile` are:
+
+- Automates tasks related to building and deploying your smart contracts.
+- Integrates with Foundry commands like `forge build`, `forge test` and `forge script`.
+- Can manage dependencies between different smart contract files.
+- Streamlines the development workflow by reducing repetitive manual commands.
+- Allows you to automatically grab the `.env` contents.
+
+In the root folder of your project create a new file called `Makefile`.
+
+After creating the file run `make` in your terminal.
+
+If you have `make` installed then you should receive the following message:
+
+(I had to install it with `sudo apt install make`).
+
+`make: *** No targets.  Stop`
+
+Let's start our `Makefile` with `-include .env` on the first line. This way we don't have to call `source .env` every time we want to access something from it.
+
+Soo... how do we actually write a shortcut?
+
+Let's write one for `forge build`.
+
+In your `Makefile` write the following line:
+
+`build:; forge build`
+
+Run `make build` in your terminal.
+
+And it works! We've written our first shortcut. Arguably not the best of shortcuts, we've saved 1 letter, but still, it's a start.
+
+Let's write a more complex shortcut. Add the following shortcut to your `Makefile`:
+
+```make
+deploy-sepolia:
+
+    forge script script/DeployFundMe.s.sol:DeployFundMe --rpc-url $(SEPOLIA_RPC_URL) --private-key $(SEPOLIA_PRIVATE_KEY) --broadcast --verify --etherscan-api-key $(ETHERSCAN_API_KEY) -vvvv
+```
+
+I had to run `forge clean` and ask chatGPT to correct my `Makefile` which had spaces instead of tabs, here's my correct `Makefile`:
+
+```make
+-include .env
+
+build:
+    forge build
+
+deploy-sepolia:
+    forge script script/DeployFundMe.s.sol:DeployFundMe --rpc-url $(SEPOLIA_RPC_URL) --private-key $(PRIVATE_KEY) --broadcast --verify --etherscan-api-key $(ETHERSCAN_API_KEY) -vvvv
+```
+
+Aaand everything worked, except the verification.
+
+// TODO: Check why verification didn't work.
+
+My output:
+
+```bash
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (1) contracts
+Start verifying contract `0x7F080196962aD0c85f068b853AA3468Fd5D17Db7` deployed on sepolia
+Compiler version: 0.8.26
+Constructor args: 000000000000000000000000694aa1769357215de4fac081bf1f309adc325306
+
+Submitting verification for [src/FundMe.sol:FundMe] 0x7F080196962aD0c85f068b853AA3468Fd5D17Db7.
+Warning: Etherscan could not detect the deployment.; waiting 5 seconds before trying again (4 tries remaining)
+
+Submitting verification for [src/FundMe.sol:FundMe] 0x7F080196962aD0c85f068b853AA3468Fd5D17Db7.
+Warning: Etherscan could not detect the deployment.; waiting 5 seconds before trying again (3 tries remaining)
+
+Submitting verification for [src/FundMe.sol:FundMe] 0x7F080196962aD0c85f068b853AA3468Fd5D17Db7.
+Warning: Etherscan could not detect the deployment.; waiting 5 seconds before trying again (2 tries remaining)
+
+Submitting verification for [src/FundMe.sol:FundMe] 0x7F080196962aD0c85f068b853AA3468Fd5D17Db7.
+Warning: Etherscan could not detect the deployment.; waiting 5 seconds before trying again (1 tries remaining)
+
+Submitting verification for [src/FundMe.sol:FundMe] 0x7F080196962aD0c85f068b853AA3468Fd5D17Db7.
+Warning: Etherscan could not detect the deployment.; waiting 5 seconds before trying again (0 tries remaining)
+
+Submitting verification for [src/FundMe.sol:FundMe] 0x7F080196962aD0c85f068b853AA3468Fd5D17Db7.
+Error: Failed to verify contract: Etherscan could not detect the deployment.
+
+Transactions saved to: /home/garosan/cyfrin-foundry/fund-me/broadcast/DeployFundMe.s.sol/11155111/run-latest.json
+
+Sensitive values saved to: /home/garosan/cyfrin-foundry/fund-me/cache/DeployFundMe.s.sol/11155111/run-latest.json
+
+Error: Not all (0 / 1) contracts were verified!
+make: *** [Makefile:7: deploy-sepolia] Error 1
+```
+
+This is just an introductory lesson on how to write Makefiles. Properly organizing your scripts and then transforming them into shortcuts that save you from typing 3 lines of code in the terminal is an ART!
+
+## Pushing to Github
+
+
+
 ## ❓ Questions and 💪 Exercises
 
 - Question ❓: What is this AggregatorV3Interface.sol file? What exactly does it do?
