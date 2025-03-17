@@ -2,13 +2,28 @@
 
 ## DeFi Introduction
 
+Basic walkthrough of DeFi, main apps (AAVE, Uniswap, MakerDAO) and MEV.
+
 ## Project Walkthrough
 
 ## Introduction to Stablecoins
 
 ## DecentralizedStableCoin.sol
 
+```bash
+mkdir defi-stablecoin
+cd defi-stablecoin
+forge init
+touch README.md # https://youtu.be/wUjYK5gwNZs?t=2550
+touch src/DecentralizedStableCoin.sol
+```
+
+Start coding the DecentralizedStableCoin.sol contract
+https://youtu.be/wUjYK5gwNZs?t=2886
+
 ## Project Setup: DSCEngine
+
+https://youtu.be/wUjYK5gwNZs?t=3293
 
 ## Create the deposit collateral function
 

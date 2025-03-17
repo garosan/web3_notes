@@ -140,6 +140,9 @@ Awesome, let's now see how to deploy this token!
 
 ## Deploy your ERC-20 token
 
+In your workspace's `script` folder, create a file named `DeployOurToken.s.sol`.
+
+
 ## ❓ Questions and 💪 Exercises
 
 ## Links
