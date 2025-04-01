@@ -344,7 +344,7 @@ This scales up the math to account for:
 - The formula ensures the AMM invariant is respected and you're not getting more than the reserves can offer.
 - It's based on the `X * Y = K` curve + fee adjustments.
 
-Would you like a visual to represent this formula too?
+## Get Amounts Out Fork
 
 ## 🛠️ Links and Resources
 
