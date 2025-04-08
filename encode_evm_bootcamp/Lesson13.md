@@ -1,4 +1,4 @@
-# Lesson 13 - Syntax and structure
+# Lesson 13 - Frontend
 
 An interface, a screen, a button, a form should only improve the usability with ease of use for the end-user. It should not add new functionality, it should only be there to make the interaction easier.
 
