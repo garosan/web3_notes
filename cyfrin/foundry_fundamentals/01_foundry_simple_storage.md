@@ -404,6 +404,20 @@ Follow the instructions from here to verify your contract on Etherscan:
 
 Note: This is the manual way to verify your contract on Etherscan but it's prone to errors and not very recommended. We will learn to verify a contract programmatically in the next lessons.
 
+## Verifying programatically
+
+You could also just deploy and verify your contract using Foundry's tools running the command like this:
+
+```solidity
+forge script script/DeploySimpleStorage.s.sol:DeploySimpleStorage \
+  --rpc-url $SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --verify \
+  --chain sepolia \
+  --etherscan-api-key $ETHERSCAN_API_KEY
+```
+
 ## Cleaning up the project
 
 Forge has a built-in command to format our code that we should always run:
@@ -490,6 +504,6 @@ Compromised private key hacks
 
 More Links
 
-- [Scripting best practices](https://book.getfoundry.sh/tutorials/best-practices#scripts)
+- [Scripting best practices](https://getfoundry.sh/guides/scripting-with-solidity)
 - [Solidity scripting](https://book.getfoundry.sh/tutorials/solidity-scripting)
 - [Cast Reference](https://book.getfoundry.sh/reference/cast/cast)
